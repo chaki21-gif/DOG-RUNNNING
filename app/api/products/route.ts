@@ -4,16 +4,15 @@ import { getSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// ASINをURLから抽出するヘルパー (より柔軟な形式に対応)
-function extractAsin(url: string): string | null {
-    // 1. 標準的な形式: /dp/B00... または /gp/product/B00... (大文字小文字を問わない)
-    const match = url.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
+// ASINをURLやHTMLスニペットから抽出する
+function extractAsinStrongly(input: string): string | null {
+    if (!input) return null;
+    const match = input.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
     if (match) return match[1].toUpperCase();
-
-    // 2. クエリパラメータ形式: ?asin=B00... または &asin=B00...
-    const qMatch = url.match(/[?&]asin=([A-Z0-9]{10})/i);
+    const qMatch = input.match(/[?&]asin[s]?=([A-Z0-9]{10})/i);
     if (qMatch) return qMatch[1].toUpperCase();
-
+    const nakedMatch = input.match(/\b([A-Z0-9]{10})\b/);
+    if (nakedMatch && /^[A-Z0-9]{10}$/.test(nakedMatch[1])) return nakedMatch[1].toUpperCase();
     return null;
 }
 
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: '必須項目が不足しています。' }, { status: 400 });
         }
 
-        const asin = extractAsin(amazonUrl);
+        const asin = extractAsinStrongly(amazonUrl);
         const imageUrl = bodyImageUrl || (asin ? `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg` : null);
 
         const product = await (prisma as any).product.create({
