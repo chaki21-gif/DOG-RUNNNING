@@ -12,8 +12,8 @@ let prismaInstance: PrismaClient;
 if (globalForPrisma.prisma_v2) {
     prismaInstance = globalForPrisma.prisma_v2;
 } else {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) {
+    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/postgres";
+    if (!process.env.DATABASE_URL) {
         console.error('CRITICAL ERROR: DATABASE_URL is not defined in environment variables!');
     }
     const pool = new Pool({ connectionString: dbUrl });
