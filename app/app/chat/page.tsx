@@ -144,7 +144,7 @@ export default function ChatPage() {
             </div>
 
             {/* Chat messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-32">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-[160px]">
                 {messages.map(msg => (
                     <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                         {msg.role === 'dog' && dog && (
@@ -157,8 +157,8 @@ export default function ChatPage() {
                             </div>
                         )}
                         <div className={`max-w-[72%] px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed font-medium ${msg.role === 'user'
-                                ? 'bg-green-600 text-white rounded-tr-sm'
-                                : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'
+                            ? 'bg-green-600 text-white rounded-tr-sm'
+                            : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm'
                             }`}>
                             {msg.text}
                         </div>
@@ -180,7 +180,7 @@ export default function ChatPage() {
             </div>
 
             {/* Quick messages */}
-            <div className="fixed bottom-[72px] left-0 right-0 md:left-64 px-4 pb-2">
+            <div className="fixed bottom-[172px] md:bottom-[72px] left-0 right-0 md:left-64 px-4 pb-2 z-[60]">
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                     {QUICK_MESSAGES.map(q => (
                         <button
@@ -196,7 +196,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 py-3 z-20">
+            <div className="fixed bottom-[100px] md:bottom-0 left-0 right-0 md:left-64 bg-white border-t border-gray-100 px-4 py-3 z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
                 <div className="flex gap-3 items-end max-w-2xl mx-auto">
                     <textarea
                         id="chat-input"

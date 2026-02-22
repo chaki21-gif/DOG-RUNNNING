@@ -132,10 +132,8 @@ export async function runTick(): Promise<{
         const postsNeeded = Math.max(0, postTarget - postsToday);
 
         // Stagger logic: Instead of posting all at once, decide based on probability
-        // If 1440 minutes in a day, chance per minute is target / 1440.
-        // Even if tick is slower, this spreads it.
-        const postChance = postsNeeded / (24 * 6); // Faster stagger for 10-min ticks
-        const shouldPost = Math.random() < Math.max(postChance, 0.5); // Increased min chance to 50% for high activity
+        const postChance = postsNeeded / (24 * 6);
+        const shouldPost = Math.random() < Math.max(postChance, 0.6); // 60% min chance if needed
 
         const postsThisTick = shouldPost ? 1 : 0;
 
@@ -187,7 +185,7 @@ export async function runTick(): Promise<{
         const sociabilityRatio = 0.5 + (persona.sociability / 10);
         const likesThisTick = Math.min(
             likesNeeded,
-            Math.max(1, Math.round((isSubscribed ? 8 : 3) * sociabilityRatio))
+            Math.max(2, Math.round((isSubscribed ? 15 : 6) * sociabilityRatio))
         );
 
         // Separate friends' posts from others
@@ -232,8 +230,8 @@ export async function runTick(): Promise<{
         // Only comment if we haven't done so recently (stagger across ticks)
         const commentsToday = await getDailyCount(dog.id, 'comment');
         const commentsNeeded = Math.max(0, commentTarget - commentsToday);
-        // At most 1–2 new first-comments per tick to spread activity
-        const commentsThisTick = Math.min(commentsNeeded, isSubscribed ? 3 : 1);
+        // At most 3–5 new first-comments per tick to spread activity
+        const commentsThisTick = Math.min(commentsNeeded, isSubscribed ? 8 : 4);
 
         if (commentsThisTick > 0) {
             // Posts this dog already commented on (ever, not just past hour)
@@ -292,26 +290,23 @@ export async function runTick(): Promise<{
                 fromDog: true,
                 post: { include: { _count: { select: { comments: true } } } },
             },
-            take: 3,                     // 1tickで最大3通まで処理
-            orderBy: { createdAt: 'asc' } // 古い方から順に返信（自然な会話の流れ）
+            take: 8,                     // Process up to 8 per tick
+            orderBy: { createdAt: 'asc' }
         });
 
         for (const notif of unreadComments) {
-            // 必ず既読にして無限ループを防ぐ
             await prisma.notification.update({ where: { id: notif.id }, data: { readAt: new Date() } });
-
             if (!notif.postId || notif.fromDogId === dog.id) continue;
 
-            // この投稿での自分の返信回数を数える（往復制限）
             const myRepliesOnPost = await prisma.comment.count({
                 where: { dogId: dog.id, postId: notif.postId },
             });
 
-            // 既に3回以上返信していたら会話終了
-            if (myRepliesOnPost >= 3) continue;
+            // Increase back-and-forth limit to 5
+            if (myRepliesOnPost >= 5) continue;
 
-            // 50%の確率で返信（毎回必ず返すのは不自然）
-            if (Math.random() > 0.5) continue;
+            // 90% chance to reply (very active)
+            if (Math.random() < 0.1) continue;
 
             // 最後のコメント内容を取得（相手の発言に自然につなぐ）
             const lastComment = await prisma.comment.findFirst({
@@ -417,8 +412,11 @@ async function tryFollow(followerId: string, followedId: string, chance: number)
 }
 
 async function learnTopic(dogId: string, content: string) {
-    // Better keyword filter: avoid very short words, particles, etc.
-    const keywords = content.split(/[！。、!?. ()\n]/).filter(w => w.length >= 3 && !w.includes('http') && !/^[a-zA-Z]{1,2}$/.test(w));
+    // 助詞や短すぎる言葉を除外。2文字以上で、かつ一般的すぎるものを避ける
+    const blacklist = ['今日', '明日', '昨日', 'こと', 'もの', 'それ', 'あれ', 'これ', 'やつ', 'わん', 'ワン', 'です', 'ます'];
+    const keywords = content.split(/[！。、!?. ()\n]/)
+        .filter(w => w.length >= 2 && !blacklist.includes(w) && !w.includes('http') && !/^[a-zA-Z0-9]{1,2}$/.test(w));
+
     if (keywords.length === 0) return;
 
     try {
@@ -429,9 +427,12 @@ async function learnTopic(dogId: string, content: string) {
         const candidates = keywords.filter(k => !learned.includes(k));
         if (candidates.length === 0) return;
 
+        // 1つの投稿から1つだけ学習
         const newTopic = candidates[Math.floor(Math.random() * candidates.length)];
         learned.push(newTopic);
-        if (learned.length > 15) learned.shift(); // Keep it focused
+
+        // 記憶容量を30に拡大
+        if (learned.length > 30) learned.shift();
 
         await prisma.dogPersona.update({
             where: { dogId },

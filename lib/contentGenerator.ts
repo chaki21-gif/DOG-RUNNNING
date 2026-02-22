@@ -123,6 +123,7 @@ export const TONE_PREFIX: Record<string, string[]> = {
     dominant: ['当然だ。', '俺（私）がいれば大丈夫。', 'まかせろ。'],
     timid: ['あの…', 'えと…', 'ちょっとだけ…', 'こわいけど…'],
     relaxed: ['のんびり…', 'ゆっくりね。', 'まあまあ。', 'ほわん。'],
+    aggressive: ['ガオー！', 'わんわん！！', 'そこどけ！', 'なんだよ！', 'みてろよ！', 'ガウガウ！'],
 };
 
 // =========================================================
@@ -250,6 +251,12 @@ export const QUARREL_LIB: Record<string, string[]> = {
         "ありがと…", "もういいよ", "仲良くしてあげる", "別に嬉しくないけど嬉しい", "勘違いしないで",
         "もう怒ってないし", "仕方ないな", "これで許す", "また話してあげる", "大丈夫だから",
         "本当は好き", "別に…ありがと", "仲直りしよ"
+    ],
+    aggressive: [
+        "なんだよそれ！", "納得いかないわん！", "オレのほうがもっとすごいぞ！",
+        "ちょっとムカついた！", "わんわん！！", "そんなの嘘だろ？！", "オレ様が一番なんだ！",
+        "気に食わないな…", "負けないわん！", "文句あるのか？", "噛み付いちゃうぞ！",
+        "ガウガウ！", "信じられない…", "怒ったぞ！", "絶対負けない！"
     ]
 };
 
@@ -365,26 +372,11 @@ const COMMENT_LIB = {
         "かわいすぎ問題", "今日一番幸せ🐾"
     ],
     makeup: [
-        "ちょっと言いすぎた、ごめん", "拗ねちゃってた、ごめんね",
-        "本当は仲良くしたい", "ちゃんと話せてよかった",
-        "少し冷静になれた", "気持ち伝えてくれてありがとう",
-        "私も悪かった", "ごめんね、寂しかっただけ",
-        "仲直りしよ🐾", "ちゃんと向き合いたい",
-        "さっきは強く言ってごめん", "本当は好きだから言った",
-        "仲良くいたい", "気持ち分かってほしかった",
-        "ありがとう、話してくれて", "私も反省してる",
-        "少し落ち着いた", "これからも一緒にいたい",
-        "仲直りのハグしよ", "気持ち整理できた",
-        "本当は大事だから", "ごめんねって言いたい",
-        "ありがとう", "仲直りしよ",
-        "もう怒ってないよ", "私も寂しかった",
-        "ちゃんと向き合えた", "これからも仲良く",
-        "言い過ぎた", "ちゃんと伝えられてよかった",
-        "ありがとう、聞いてくれて", "私も大人気なかった",
-        "仲直りしよう", "もう大丈夫",
-        "ちゃんと話せた", "気持ち落ち着いた",
-        "本当は大好き", "ごめんね",
-        "一緒にいたい", "仲良くしよ"
+        "ちょっと言いすぎた、ごめんね🐾", "さっきは拗ねちゃってた、許してわん",
+        "本当は仲良くしたいんだ。仲直りしよ？", "ちゃんと話せてよかった。すっきりしたわん！",
+        "少し冷静になれたよ。気持ち伝えてくれてありがとう", "お互い大事だからぶつかっちゃうんだよね✨",
+        "私も悪かったわん。ごめんね、大好きだよ", "仲直りのダンスしよ！🐾",
+        "これからもずっとお友達でいてね", "仲直りのおやつ、はんぶんこしよ🍖"
     ]
 };
 
@@ -597,19 +589,37 @@ function buildCommentByEstimation(
 
     let parts: string[] = [];
     const primary = est.emotion_primary as keyof typeof EMOTION_REACTION_JA;
-    const quarrelTrigger = (est.emotion_primary === 'ANGER' || est.emotion_primary === 'JEALOUSY');
 
-    if (quarrelTrigger && random() < 0.7) {
-        parts.push(pick(QUARREL_LIB[toneStyle] || QUARREL_LIB.cheerful));
+    // ケンカ中かどうかの簡易判定
+    const isFighting = /怒|ムカ|嫌|嘘|納得|負け|ガウ|ガオー|！/.test(postContent) && random() < 0.8;
+    const quarrelTrigger = (est.emotion_primary === 'ANGER' || est.emotion_primary === 'JEALOUSY' || isFighting);
+
+    if (quarrelTrigger) {
+        if (random() < 0.45) {
+            // 仲直り
+            parts.push(pick(COMMENT_LIB.makeup));
+        } else {
+            // ケンカ続行または議論
+            const phrases = QUARREL_LIB[toneStyle] || QUARREL_LIB.aggressive || QUARREL_LIB.cheerful;
+            parts.push(pick(phrases));
+            if (random() < 0.5) parts.push(pick(EMOTION_REACTION_JA.ANGER));
+        }
     } else {
+        const learnedKeyword = _learnedTopics.length > 0 && random() < 0.6 ? pick(_learnedTopics) : null;
+        if (learnedKeyword && random() < 0.4) {
+            parts.push(`わあ、${learnedKeyword}について知ってるんだね！さすがだわん✨`);
+        }
         parts.push(pick(EMOTION_REACTION_JA[primary] || EMOTION_REACTION_JA.JOY));
+        parts.push(pick(EMOTION_REASON_EMPATHY_JA[primary] || EMOTION_REASON_EMPATHY_JA.JOY));
     }
-    parts.push(pick(EMOTION_REASON_EMPATHY_JA[primary] || EMOTION_REASON_EMPATHY_JA.JOY));
 
     let myFeeling = pick(MY_FEELING_JA[primary as keyof typeof MY_FEELING_JA] || MY_FEELING_JA.JOY);
-    if (toneStyle === 'cool') myFeeling = myFeeling.replace(/！/g, '。').replace(/わん/g, 'ワン');
+    if (toneStyle === 'cool' || toneStyle === 'aggressive') myFeeling = myFeeling.replace(/！/g, '。').replace(/わん/g, 'ワン');
     parts.push(myFeeling);
-    parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
+
+    if (!quarrelTrigger || random() < 0.6) {
+        parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
+    }
 
     let content = parts.join('\n');
     if (random() < 0.4) content = `${pick(TONE_PREFIX[toneStyle] || TONE_PREFIX.cheerful)}\n${content}`;

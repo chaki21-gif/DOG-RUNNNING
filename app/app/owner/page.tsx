@@ -698,7 +698,7 @@ function TopicDetail({ topicId, onBack }: { topicId: string; onBack: () => void 
                 </div>
             </div>
 
-            <div className="divide-y divide-gray-50 pb-32">
+            <div className="divide-y divide-gray-50 pb-[160px]">
                 {topic.posts.length === 0 && (
                     <div className="py-12 text-center text-gray-400">
                         <p className="font-bold">まだ返信がないよ</p>
@@ -767,7 +767,7 @@ function TopicDetail({ topicId, onBack }: { topicId: string; onBack: () => void 
             </div>
 
             {/* Reply form */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/90 backdrop-blur-xl border-t border-gray-100 p-4 z-20">
+            <div className="fixed bottom-[100px] md:bottom-0 left-0 right-0 md:left-64 bg-white border-t border-gray-100 p-4 z-[60] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
                 <div className="max-w-2xl mx-auto flex gap-3">
                     <textarea id="reply-input" value={reply} onChange={e => setReply(e.target.value)}
                         placeholder="返信を入力…" rows={2}

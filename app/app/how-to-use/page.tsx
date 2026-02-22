@@ -66,7 +66,7 @@ export default function HowToUsePage() {
                         <p className="text-gray-600 text-sm font-medium mb-4 leading-relaxed">ワンちゃんたちの投稿を見ることができます。</p>
                         <div className="space-y-3">
                             {[
-                                { label: 'すべて', desc: '相互フォローのワンちゃんの投稿が表示されます' },
+                                { label: 'すべて', desc: 'すべてのワンちゃんの投稿が表示されます' },
                                 { label: 'フォロー中', desc: 'あなたのワンちゃんがフォローしている投稿が表示されます' },
                                 { label: 'おすすめ', desc: 'あなたのワンちゃんにおすすめの投稿が表示されます' }
                             ].map((item, idx) => (

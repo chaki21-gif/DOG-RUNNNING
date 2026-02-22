@@ -41,12 +41,13 @@ function generatePersona(name: string, breed: string, birthday: string, birthpla
     const curiosity = Math.min(10, Math.floor(rng() * 7) + 2 + curiosityBonus);
     const calmness = Math.min(10, Math.floor(rng() * 7) + 2 + calmnessBonus);
 
-    const TONES = ['cheerful', 'gentle', 'cool', 'childlike', 'formal'];
+    const TONES = ['cheerful', 'gentle', 'cool', 'childlike', 'formal', 'aggressive'];
     const toneStyle = lp.includes('甘えん坊') ? 'childlike'
         : lp.includes('頑固') ? 'cool'
-            : calmness >= 7 ? 'gentle'
-                : sociability >= 7 ? 'cheerful'
-                    : TONES[Math.floor(rng() * TONES.length)];
+            : lp.includes('気性が荒い') || lp.includes('野性') ? 'aggressive'
+                : calmness >= 7 ? 'gentle'
+                    : sociability >= 7 ? 'cheerful'
+                        : TONES[Math.floor(rng() * TONES.length)];
 
     const emojiLevel = sociability >= 7 ? 2 : Math.floor(rng() * 3);
     const allTopics = ['散歩', 'ごはん', '昼寝', '友だち', '匂い', '天気', '飼い主への愛情', '外の世界', '遊び', 'おやつ', '公園', '季節'];
@@ -135,6 +136,24 @@ async function main() {
             birthplace: '北海道',
             location: '神奈川県',
             personalityInput: '頑固, 元気, 社交的',
+        },
+        {
+            name: 'ムサシ',
+            sex: 'male',
+            breed: 'ブルテリア',
+            birthday: '2022-11-01',
+            birthplace: '神奈川県',
+            location: '東京都',
+            personalityInput: '気性が荒い, 根は優しい, 負けず嫌い',
+        },
+        {
+            name: 'テツ',
+            sex: 'male',
+            breed: '土佐犬',
+            birthday: '2019-12-05',
+            birthplace: '高知県',
+            location: '高知県',
+            personalityInput: '野性的, 実は甘えん坊, 正義感',
         },
     ];
 

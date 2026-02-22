@@ -92,7 +92,8 @@ export default function ShoppingPage() {
     return (
         <div className="pb-24">
             {/* ヒーローセクション */}
-            <div className="bg-gradient-to-r from-orange-400 to-amber-500 pt-12 pb-20 px-6 text-white rounded-b-[3rem] shadow-lg mb-8 relative">
+            <div className="bg-gradient-to-r from-orange-400 to-amber-500 pt-10 pb-20 px-6 text-white rounded-b-[3rem] shadow-lg mb-8 relative">
+                <p className="text-[10px] text-white/70 mb-2 font-medium">※当ページには広告（Amazonアソシエイトリンク）が含まれています。</p>
                 <h1 className="text-3xl font-bold mb-2 text-center md:text-left">Dog Shopping 🛍️</h1>
 
                 {isAdmin && (

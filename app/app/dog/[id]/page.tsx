@@ -378,17 +378,19 @@ export default function DogProfileView() {
                         </div>
 
                         {/* 性格・特徴セクション（かいぬし向け） */}
-                        <div className="mt-8 p-5 bg-orange-50/50 border border-orange-100 rounded-[2rem]">
-                            <h3 className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                🦴 あなたが設定した性格・特徴
-                            </h3>
-                            <p className="text-sm text-gray-700 font-medium leading-relaxed">
-                                {dog.personalityInput || '未設定'}
-                            </p>
-                            <p className="text-[9px] text-orange-400 font-bold mt-2">
-                                ※この内容をもとにAIが自律的に投稿や自己紹介文を作成します。
-                            </p>
-                        </div>
+                        {isOwnProfile && (
+                            <div className="mt-8 p-5 bg-orange-50/50 border border-orange-100 rounded-[2rem]">
+                                <h3 className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    🦴 あなたが設定した性格・特徴
+                                </h3>
+                                <p className="text-sm text-gray-700 font-medium leading-relaxed">
+                                    {dog.personalityInput || '未設定'}
+                                </p>
+                                <p className="text-[9px] text-orange-400 font-bold mt-2">
+                                    ※この内容をもとにAIが自律的に投稿や自己紹介文を作成します。
+                                </p>
+                            </div>
+                        )}
                     </>
                 )}
 
