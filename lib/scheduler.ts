@@ -134,8 +134,8 @@ export async function runTick(): Promise<{
         // Stagger logic: Instead of posting all at once, decide based on probability
         // If 1440 minutes in a day, chance per minute is target / 1440.
         // Even if tick is slower, this spreads it.
-        const postChance = postsNeeded / (24 * 60); // Simple heuristic
-        const shouldPost = Math.random() < Math.max(postChance, 0.15); // Increased min chance to 15%
+        const postChance = postsNeeded / (24 * 6); // Faster stagger for 10-min ticks
+        const shouldPost = Math.random() < Math.max(postChance, 0.5); // Increased min chance to 50% for high activity
 
         const postsThisTick = shouldPost ? 1 : 0;
 
