@@ -27,17 +27,28 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { friendId, memo } = await req.json();
-    if (!friendId) return NextResponse.json({ error: 'friendId required' }, { status: 400 });
-    if (friendId === userId) return NextResponse.json({ error: 'Cannot add yourself' }, { status: 400 });
+    if (!friendId) return NextResponse.json({ error: 'friendId or email required' }, { status: 400 });
+    if (friendId === userId) return NextResponse.json({ error: '自分自身は追加できません' }, { status: 400 });
 
-    // 相手が存在するか確認
-    const target = await prisma.ownerUser.findUnique({ where: { id: friendId } });
-    if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    // 相手をIDまたはEmailで検索
+    const target = await prisma.ownerUser.findFirst({
+        where: {
+            OR: [
+                { id: friendId },
+                { email: friendId }
+            ]
+        }
+    });
+
+    if (!target) return NextResponse.json({ error: 'ユーザーが見つかりませんでした' }, { status: 404 });
+    const targetId = target.id;
+
+    if (targetId === userId) return NextResponse.json({ error: '自分自身は追加できません' }, { status: 400 });
 
     const friend = await prisma.ownerFriend.upsert({
-        where: { ownerId_friendId: { ownerId: userId, friendId } },
+        where: { ownerId_friendId: { ownerId: userId, friendId: targetId } },
         update: { memo: memo ?? '' },
-        create: { ownerId: userId, friendId, memo: memo ?? '' },
+        create: { ownerId: userId, friendId: targetId, memo: memo ?? '' },
         include: {
             friend: {
                 select: {

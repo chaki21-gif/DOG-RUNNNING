@@ -309,6 +309,7 @@ function AnalysisTab() {
 // ──────────────────────────────────────────────
 function FriendsTab() {
     const [friends, setFriends] = useState<OwnerFriend[]>([]);
+    const [myInfo, setMyInfo] = useState<{ id: string; email: string } | null>(null);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
     const [friendEmail, setFriendEmail] = useState('');
@@ -317,16 +318,29 @@ function FriendsTab() {
     const [error, setError] = useState('');
     const [editingMemo, setEditingMemo] = useState<string | null>(null);
     const [memoText, setMemoText] = useState('');
+    const [copied, setCopied] = useState(false);
 
     const load = async () => {
         setLoading(true);
-        const res = await fetch('/api/owner/friends');
-        const data = await res.json();
-        setFriends(Array.isArray(data) ? data : []);
+        const [friendsRes, meRes] = await Promise.all([
+            fetch('/api/owner/friends'),
+            fetch('/api/owner/me')
+        ]);
+        const friendsData = await friendsRes.json();
+        const meData = await meRes.json();
+        setFriends(Array.isArray(friendsData) ? friendsData : []);
+        if (!meData.error) setMyInfo(meData);
         setLoading(false);
     };
 
     useEffect(() => { load(); }, []);
+
+    const copyId = () => {
+        if (!myInfo) return;
+        navigator.clipboard.writeText(myInfo.id);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const addFriend = async () => {
         setError('');
@@ -376,37 +390,61 @@ function FriendsTab() {
 
     return (
         <div>
-            <div className="px-4 py-3 flex justify-between items-center">
-                <p className="text-sm text-gray-500 font-medium">リアルでの犬友達のかいぬしを登録できます</p>
+            {/* My ID Section */}
+            {myInfo && (
+                <div className="mx-4 mt-4 p-5 bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">あなたの「かいぬしID」</h3>
+                        <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">お友達に教えてあげよう！</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-100/50 p-3 rounded-2xl border border-gray-100">
+                        <code className="flex-1 text-xs font-mono text-gray-600 break-all select-all">{myInfo.id}</code>
+                        <button
+                            onClick={copyId}
+                            className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all ${copied ? 'bg-green-600 text-white' : 'bg-white text-gray-900 border border-gray-200 hover:border-gray-300'}`}
+                        >
+                            {copied ? 'コピーしました！' : 'コピー'}
+                        </button>
+                    </div>
+                    <p className="mt-2 text-[10px] text-gray-400 font-medium">※SNS内の友達追加や、掲示板での本人確認に使用されます。</p>
+                </div>
+            )}
+
+            <div className="px-4 py-4 flex justify-between items-center">
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">お友達リスト</p>
                 <button id="add-friend-btn" onClick={() => setShowAdd(!showAdd)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-colors shadow-sm shadow-green-200">
-                    ＋ 追加
+                    className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-2xl font-black text-sm hover:bg-green-700 transition-all active:scale-95 shadow-lg shadow-green-100">
+                    ＋ お友達を追加
                 </button>
             </div>
 
             {showAdd && (
-                <div className="mx-4 mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl space-y-3">
-                    <h3 className="font-black text-green-800">お友達を追加</h3>
+                <div className="mx-4 mb-6 p-6 bg-green-50 rounded-[2rem] border-2 border-green-100 space-y-4 animate-in slide-in-from-top duration-300">
+                    <h3 className="font-black text-green-800 text-lg">お友達を登録する 🐾</h3>
                     <div>
-                        <label className="text-xs font-bold text-green-700 uppercase tracking-wide">かいぬしのID</label>
+                        <label className="text-xs font-black text-green-700 uppercase tracking-widest mb-1.5 block leading-none">かいぬしID または メールアドレス</label>
                         <input id="friend-id-input" type="text" value={friendEmail} onChange={e => setFriendEmail(e.target.value)}
-                            placeholder="かいぬしのIDを入力"
-                            className="w-full mt-1 px-3 py-2 bg-white border border-green-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
+                            placeholder="ID または email@example.com"
+                            className="w-full px-4 py-3 bg-white border-2 border-green-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-green-500 transition-all shadow-sm" />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-green-700 uppercase tracking-wide">メモ（相手の名前など）</label>
+                        <label className="text-xs font-black text-green-700 uppercase tracking-widest mb-1.5 block leading-none">メモ（お名前など）</label>
                         <input id="friend-memo-input" type="text" value={friendMemo} onChange={e => setFriendMemo(e.target.value)}
                             placeholder="例: 田中さん（ポメラニアンの飼い主）"
-                            className="w-full mt-1 px-3 py-2 bg-white border border-green-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
+                            className="w-full px-4 py-3 bg-white border-2 border-green-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-green-500 transition-all shadow-sm" />
                     </div>
-                    {error && <p className="text-red-500 text-xs font-bold">{error}</p>}
-                    <div className="flex gap-2">
+                    {error && (
+                        <div className="bg-red-50 text-red-500 text-xs font-bold p-3 rounded-xl border border-red-100">
+                            ⚠️ {error}
+                        </div>
+                    )}
+                    <div className="flex gap-3 pt-2">
                         <button onClick={addFriend} disabled={adding}
-                            className="flex-1 py-2 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 disabled:opacity-50 transition-colors">
-                            {adding ? '追加中…' : '追加する'}
+                            className="flex-1 py-3.5 bg-green-600 text-white rounded-2xl font-black text-sm hover:bg-green-700 disabled:opacity-50 transition-all shadow-xl shadow-green-200">
+                            {adding ? '追加中…' : 'お友達に追加する'}
                         </button>
                         <button onClick={() => setShowAdd(false)}
-                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                            className="px-6 py-3.5 bg-white border-2 border-green-100 rounded-2xl font-black text-sm text-green-700 hover:bg-green-50 transition-all">
                             キャンセル
                         </button>
                     </div>
