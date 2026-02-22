@@ -11,6 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const [myDogId, setMyDogId] = useState<string | null>(null);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         fetch('/api/dogs')
@@ -36,12 +37,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const navItems = [
         { href: '/app', icon: '🏠', label: t('timeline'), id: 'home' },
-        { href: '/app/search', icon: '🔍', label: '検索', id: 'search' },
         { href: '/app/notifications', icon: '🔔', label: t('notifications'), id: 'notifications' },
-        { href: myDogId ? `/app/dog/${myDogId}` : '/app/dog', icon: '🐕', label: t('myProfile'), id: 'profile' },
         { href: '/app/chat', icon: '💬', label: '愛犬と話す', id: 'chat' },
-        { href: '/app/owner', icon: '🏡', label: 'かいぬし', id: 'owner' },
         { href: '/app/diary', icon: '📓', label: t('diary'), id: 'diary' },
+        { href: '/app/search', icon: '🔍', label: '検索', id: 'search' },
+        { href: myDogId ? `/app/dog/${myDogId}` : '/app/dog', icon: '🐕', label: t('myProfile'), id: 'profile' },
+        { href: '/app/owner', icon: '🏡', label: 'かいぬし', id: 'owner' },
         { href: '/app/shopping', icon: '🛒', label: 'ショッピング', id: 'shopping' },
         { href: '/settings', icon: '⚙️', label: t('settings'), id: 'settings' },
     ];
@@ -109,8 +110,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </aside>
 
             {/* Bottom Nav (Mobile) */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-2 py-3 flex justify-evenly items-center z-50 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] rounded-t-3xl">
-                {navItems.slice(0, 5).map((item) => {
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-2 py-3 pb-8 flex justify-evenly items-center z-50 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] rounded-t-[40px]">
+                {navItems.slice(0, 4).map((item) => {
                     const isActive = pathname === item.href;
                     const hasBadge = item.id === 'notifications' && unreadCount > 0;
                     return (
@@ -129,11 +130,70 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         </Link>
                     );
                 })}
+                {/* More Menu Trigger */}
+                <button
+                    onClick={() => setIsMenuOpen(true)}
+                    className="flex flex-col items-center gap-1 text-gray-400 active:scale-95 transition-all"
+                >
+                    <span className="text-2xl">☰</span>
+                    <span className="text-[10px] font-black uppercase tracking-tighter">Menu</span>
+                </button>
             </nav>
+
+            {/* Full Menu Overlay (Mobile) */}
+            {isMenuOpen && (
+                <div className="md:hidden fixed inset-0 z-[60] bg-white animate-in slide-in-from-bottom duration-300">
+                    <div className="p-8 h-full flex flex-col pt-16">
+                        <div className="flex items-center justify-between mb-12">
+                            <span className="text-3xl font-black tracking-tighter uppercase px-2">
+                                Menu
+                            </span>
+                            <button
+                                onClick={() => setIsMenuOpen(false)}
+                                className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-2xl"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 flex-1">
+                            {navItems.map((item) => {
+                                const isActive = pathname === item.href;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className={`flex flex-col items-start gap-4 p-6 rounded-[32px] border transition-all ${isActive
+                                            ? 'bg-green-600 border-green-700 text-white shadow-xl shadow-green-200'
+                                            : 'bg-gray-50/50 border-gray-100 text-gray-900 active:bg-gray-100'
+                                            }`}
+                                    >
+                                        <span className={`text-4xl p-2 rounded-2xl ${isActive ? 'bg-white/20' : 'bg-white shadow-sm'}`}>
+                                            {item.icon}
+                                        </span>
+                                        <span className="font-black text-lg tracking-tight leading-none break-all">
+                                            {item.label}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={handleLogout}
+                            className="mt-8 flex items-center justify-center gap-3 p-6 rounded-[32px] bg-red-50 text-red-600 font-black text-lg mb-8"
+                        >
+                            <span>🚪</span>
+                            <span>{t('logout')}</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Main content */}
             <main className="md:ml-64 flex-1 min-h-screen bg-white">
-                <div className="max-w-2xl mx-auto min-h-screen border-x border-gray-50 flex flex-col">
+                <div className="max-w-2xl mx-auto min-h-screen border-x border-gray-50 flex flex-col pb-24 md:pb-0">
                     {children}
                 </div>
             </main>
