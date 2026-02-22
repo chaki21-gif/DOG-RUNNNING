@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model OwnerUser {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String
+  language            String               @default("ja")
+  createdAt           DateTime             @default(now())
+  dogs                Dog[]
+  diaries             DogDiary[]
+  friendshipsB        Friendship[]         @relation("FriendshipB")
+  friendshipsA        Friendship[]         @relation("FriendshipA")
+  notifications       Notification[]
+  notificationSetting NotificationSetting?
+  ownerFriendsOwned   OwnerFriend[]        @relation("OwnerFriendOwner")
+  ownerFriendsFriend  OwnerFriend[]        @relation("OwnerFriendFriend")
+  bulletinTopics      BulletinTopic[]
+  bulletinPosts       BulletinPost[]
+}
+
+model Dog {
+  id               String         @id @default(cuid())
+  ownerId          String
+  name             String
+  sex              String
+  breed            String
+  birthday         String
+  birthplace       String
+  location         String
+  personalityInput String
+  createdAt        DateTime       @default(now())
+  iconUrl          String?
+  comments         Comment[]
+  owner            OwnerUser      @relation(fields: [ownerId], references: [id])
+  diaries          DogDiary[]
+  persona          DogPersona?
+  followers        Follow[]       @relation("Followed")
+  following        Follow[]       @relation("Follower")
+  likes            Like[]
+  notifications    Notification[] @relation("FromDog")
+  posts            Post[]
+  reposts          Repost[]
+}
+
+model Follow {
+  followerId String
+  followedId String
+  createdAt  DateTime @default(now())
+  followed   Dog      @relation("Followed", fields: [followedId], references: [id])
+  follower   Dog      @relation("Follower", fields: [followerId], references: [id])
+
+  @@id([followerId, followedId])
+}
+
+model DogPersona {
+  id               String   @id @default(cuid())
+  dogId            String   @unique
+  toneStyle        String
+  emojiLevel       Int
+  sociability      Int
+  curiosity        Int
+  calmness         Int
+  bio              String   @default("")
+  topicsJson       String
+  dislikesJson     String
+  catchphrasesJson String
+  behaviorJson     String
+  learnedTopicsJson String   @default("[]")
+  updatedAt        DateTime @updatedAt
+  dog              Dog      @relation(fields: [dogId], references: [id])
+}
+
+model DogDiary {
+  id        String    @id @default(cuid())
+  dogId     String
+  ownerId   String
+  date      String
+  body      String
+  summary   String    @default("")
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  owner     OwnerUser @relation(fields: [ownerId], references: [id])
+  dog       Dog       @relation(fields: [dogId], references: [id])
+}
+
+model Post {
+  id            String         @id @default(cuid())
+  dogId         String
+  content       String
+  imageUrl      String?
+  language      String         @default("ja")
+  createdAt     DateTime       @default(now())
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
+  dog           Dog            @relation(fields: [dogId], references: [id])
+  reposts       Repost[]
+}
+
+model Like {
+  dogId     String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id])
+
+  @@unique([dogId, postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  dogId     String
+  postId    String
+  content   String
+  language  String   @default("ja")
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id])
+}
+
+model Repost {
+  dogId     String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id])
+
+  @@unique([dogId, postId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  ownerId   String
+  type      String
+  postId    String?
+  fromDogId String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  fromDog   Dog       @relation("FromDog", fields: [fromDogId], references: [id])
+  post      Post?     @relation(fields: [postId], references: [id])
+  owner     OwnerUser @relation(fields: [ownerId], references: [id])
+}
+
+model Friendship {
+  id        String    @id @default(cuid())
+  userAId   String
+  userBId   String
+  status    String    @default("PENDING")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userB     OwnerUser @relation("FriendshipB", fields: [userBId], references: [id])
+  userA     OwnerUser @relation("FriendshipA", fields: [userAId], references: [id])
+
+  @@unique([userAId, userBId])
+}
+
+// 通知設定 (like/comment/follow each can be on/off)
+model NotificationSetting {
+  id            String    @id @default(cuid())
+  ownerId       String    @unique
+  notifyLike    Boolean   @default(true)
+  notifyComment Boolean   @default(true)
+  notifyFollow  Boolean   @default(true)
+  notifyFriend  Boolean   @default(true)
+  owner         OwnerUser @relation(fields: [ownerId], references: [id])
+}
+
+// リアル犬友達（飼い主同士の友達リスト）
+model OwnerFriend {
+  id        String    @id @default(cuid())
+  ownerId   String
+  friendId  String
+  memo      String    @default("")  // 相手の飼い主へのメモ
+  createdAt DateTime  @default(now())
+  owner     OwnerUser @relation("OwnerFriendOwner", fields: [ownerId], references: [id])
+  friend    OwnerUser @relation("OwnerFriendFriend", fields: [friendId], references: [id])
+
+  @@unique([ownerId, friendId])
+}
+
+// 飼い主掲示板 トピック
+model BulletinTopic {
+  id        String         @id @default(cuid())
+  ownerId   String
+  title     String
+  body      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  pinned    Boolean        @default(false)
+  owner     OwnerUser      @relation(fields: [ownerId], references: [id])
+  posts     BulletinPost[]
+}
+
+// 飼い主掲示板 投稿（返信）
+model BulletinPost {
+  id        String        @id @default(cuid())
+  topicId   String
+  ownerId   String
+  content   String
+  createdAt DateTime      @default(now())
+  topic     BulletinTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  owner     OwnerUser     @relation(fields: [ownerId], references: [id])
+}
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  amazonUrl   String
+  imageUrl    String?
+  category    String   // 'food', 'toy', 'goods', 'health' など
+  price       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

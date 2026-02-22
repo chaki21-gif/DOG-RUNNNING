@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #212121;
+  --primary: #2e7d32;
+  /* Grass Green */
+  --primary-hover: #1b5e20;
+  --accent: #f1f8e9;
+  /* Soft Light Green */
+  --border: #e0e0e0;
+  --card: #ffffff;
+  --muted: #757575;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Keep it light even in dark mode for "Dog Run" vibe unless explicitly asked otherwise,
+       but for now let's stick to the user's "White background" request absolutely. */
+    --background: #ffffff;
+    --foreground: #212121;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Smooth transitions */
+a,
+button {
+  transition: all 0.15s ease;
+}
