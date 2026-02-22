@@ -4,7 +4,7 @@ import { getMessages, getLocale } from 'next-intl/server';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'WanSNS - 愛犬の自律SNS',
+  title: 'DOG RUNNING - 愛犬の自律SNS',
   description: '愛犬が自律的にSNS活動するアプリ。飼い主は見守るだけ。',
 };
 

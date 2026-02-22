@@ -43,10 +43,13 @@ export async function POST(req: NextRequest) {
     const userId = await getSession();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 指定された特定のユーザーIDのみを許可
-    const isAdmin = userId === 'cmluyaayl0002qlbmwdujkht4';
+    // ユーザー情報の取得と管理者チェック
+    const user = await prisma.ownerUser.findUnique({
+        where: { id: userId },
+        select: { isAdmin: true }
+    });
 
-    if (!isAdmin) {
+    if (!user?.isAdmin) {
         return NextResponse.json({ error: '管理者権限が必要です。' }, { status: 403 });
     }
 
@@ -86,10 +89,13 @@ export async function DELETE(req: NextRequest) {
     const userId = await getSession();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 指定された特定のユーザーIDのみを許可
-    const isAdmin = userId === 'cmluyaayl0002qlbmwdujkht4';
+    // ユーザー情報の取得と管理者チェック
+    const user = await prisma.ownerUser.findUnique({
+        where: { id: userId },
+        select: { isAdmin: true }
+    });
 
-    if (!isAdmin) {
+    if (!user?.isAdmin) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

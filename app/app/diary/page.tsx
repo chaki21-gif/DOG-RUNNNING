@@ -56,31 +56,16 @@ export default function DiaryPage() {
         try {
             let imageUrl: string | null = null;
 
-            // Upload image first if selected
-            if (imageFile) {
-                setUploading(true);
-                const formData = new FormData();
-                formData.append('file', imageFile);
-                try {
-                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-                    const uploadData = await uploadRes.json();
-                    if (uploadRes.ok && uploadData.url) {
-                        imageUrl = uploadData.url;
-                    } else {
-                        console.error('Upload failed:', uploadData.error);
-                        alert(`画像のアップロードに失敗しました: ${uploadData.error || '不明なエラー'}`);
-                        setUploading(false);
-                        setSaving(false);
-                        return; // Stop if upload failed but image was intended
-                    }
-                } catch (err) {
-                    console.error('Upload error:', err);
-                    alert('ネットワークエラーにより画像のアップロードに失敗しました。');
-                    setUploading(false);
+            // Vercel等のサーバーレス環境ではファイルの書き込みができないため、
+            // 画像をBase64形式のまま保存するように変更します。
+            if (imagePreview) {
+                // 大きすぎる画像はDB保存でエラーになる可能性があるため、簡易的なチェック
+                if (imagePreview.length > 2 * 1024 * 1024) { // 約2MB (Base64込み)
+                    alert('画像サイズが大きすぎます。もう少し小さい画像を選択してください。');
                     setSaving(false);
                     return;
                 }
-                setUploading(false);
+                imageUrl = imagePreview;
             }
 
             const res = await fetch('/api/diary', {
@@ -198,7 +183,7 @@ export default function DiaryPage() {
                                     disabled={saving || !body.trim()}
                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-lg shadow-green-100"
                                 >
-                                    {uploading ? '📤 アップロード中...' : saving ? t('saving') : `📝 ${t('submit')}`}
+                                    {saving ? t('saving') : `📝 ${t('submit')}`}
                                 </button>
                                 <button
                                     type="button"

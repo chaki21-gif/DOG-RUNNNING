@@ -11,17 +11,18 @@ model OwnerUser {
   email               String               @unique
   passwordHash        String
   language            String               @default("ja")
+  isAdmin             Boolean              @default(false)
   createdAt           DateTime             @default(now())
+  bulletinPosts       BulletinPost[]
+  bulletinTopics      BulletinTopic[]
   dogs                Dog[]
   diaries             DogDiary[]
-  friendshipsB        Friendship[]         @relation("FriendshipB")
   friendshipsA        Friendship[]         @relation("FriendshipA")
+  friendshipsB        Friendship[]         @relation("FriendshipB")
   notifications       Notification[]
   notificationSetting NotificationSetting?
-  ownerFriendsOwned   OwnerFriend[]        @relation("OwnerFriendOwner")
   ownerFriendsFriend  OwnerFriend[]        @relation("OwnerFriendFriend")
-  bulletinTopics      BulletinTopic[]
-  bulletinPosts       BulletinPost[]
+  ownerFriendsOwned   OwnerFriend[]        @relation("OwnerFriendOwner")
 }
 
 model Dog {
@@ -59,21 +60,21 @@ model Follow {
 }
 
 model DogPersona {
-  id               String   @id @default(cuid())
-  dogId            String   @unique
-  toneStyle        String
-  emojiLevel       Int
-  sociability      Int
-  curiosity        Int
-  calmness         Int
-  bio              String   @default("")
-  topicsJson       String
-  dislikesJson     String
-  catchphrasesJson String
-  behaviorJson     String
+  id                String   @id @default(cuid())
+  dogId             String   @unique
+  toneStyle         String
+  emojiLevel        Int
+  sociability       Int
+  curiosity         Int
+  calmness          Int
+  bio               String   @default("")
+  topicsJson        String
+  dislikesJson      String
+  catchphrasesJson  String
+  behaviorJson      String
   learnedTopicsJson String   @default("[]")
-  updatedAt        DateTime @updatedAt
-  dog              Dog      @relation(fields: [dogId], references: [id])
+  updatedAt         DateTime @updatedAt
+  dog               Dog      @relation(fields: [dogId], references: [id])
 }
 
 model DogDiary {
@@ -85,8 +86,8 @@ model DogDiary {
   summary   String    @default("")
   imageUrl  String?
   createdAt DateTime  @default(now())
-  owner     OwnerUser @relation(fields: [ownerId], references: [id])
   dog       Dog       @relation(fields: [dogId], references: [id])
+  owner     OwnerUser @relation(fields: [ownerId], references: [id])
 }
 
 model Post {
@@ -107,8 +108,8 @@ model Like {
   dogId     String
   postId    String
   createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id])
   dog       Dog      @relation(fields: [dogId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 
   @@unique([dogId, postId])
 }
@@ -120,16 +121,16 @@ model Comment {
   content   String
   language  String   @default("ja")
   createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id])
   dog       Dog      @relation(fields: [dogId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 }
 
 model Repost {
   dogId     String
   postId    String
   createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id])
   dog       Dog      @relation(fields: [dogId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
 
   @@unique([dogId, postId])
 }
@@ -143,8 +144,8 @@ model Notification {
   createdAt DateTime  @default(now())
   readAt    DateTime?
   fromDog   Dog       @relation("FromDog", fields: [fromDogId], references: [id])
-  post      Post?     @relation(fields: [postId], references: [id])
   owner     OwnerUser @relation(fields: [ownerId], references: [id])
+  post      Post?     @relation(fields: [postId], references: [id])
 }
 
 model Friendship {
@@ -154,13 +155,12 @@ model Friendship {
   status    String    @default("PENDING")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  userB     OwnerUser @relation("FriendshipB", fields: [userBId], references: [id])
   userA     OwnerUser @relation("FriendshipA", fields: [userAId], references: [id])
+  userB     OwnerUser @relation("FriendshipB", fields: [userBId], references: [id])
 
   @@unique([userAId, userBId])
 }
 
-// 通知設定 (like/comment/follow each can be on/off)
 model NotificationSetting {
   id            String    @id @default(cuid())
   ownerId       String    @unique
@@ -171,20 +171,18 @@ model NotificationSetting {
   owner         OwnerUser @relation(fields: [ownerId], references: [id])
 }
 
-// リアル犬友達（飼い主同士の友達リスト）
 model OwnerFriend {
   id        String    @id @default(cuid())
   ownerId   String
   friendId  String
-  memo      String    @default("")  // 相手の飼い主へのメモ
+  memo      String    @default("")
   createdAt DateTime  @default(now())
-  owner     OwnerUser @relation("OwnerFriendOwner", fields: [ownerId], references: [id])
   friend    OwnerUser @relation("OwnerFriendFriend", fields: [friendId], references: [id])
+  owner     OwnerUser @relation("OwnerFriendOwner", fields: [ownerId], references: [id])
 
   @@unique([ownerId, friendId])
 }
 
-// 飼い主掲示板 トピック
 model BulletinTopic {
   id        String         @id @default(cuid())
   ownerId   String
@@ -193,30 +191,30 @@ model BulletinTopic {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
   pinned    Boolean        @default(false)
-  owner     OwnerUser      @relation(fields: [ownerId], references: [id])
   posts     BulletinPost[]
+  owner     OwnerUser      @relation(fields: [ownerId], references: [id])
 }
 
-// 飼い主掲示板 投稿（返信）
 model BulletinPost {
   id        String        @id @default(cuid())
   topicId   String
   ownerId   String
   content   String
   createdAt DateTime      @default(now())
-  topic     BulletinTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
   owner     OwnerUser     @relation(fields: [ownerId], references: [id])
+  topic     BulletinTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
 }
+
 model Product {
   id          String   @id @default(cuid())
   title       String
   description String?
   amazonUrl   String
   imageUrl    String?
-  category    String   // 'food', 'toy', 'goods', 'health' など
+  category    String
   price       String?
-  isFeatured  Boolean  @default(false)
-  displayOrder Int     @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isFeatured   Boolean  @default(false)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

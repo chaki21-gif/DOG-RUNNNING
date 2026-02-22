@@ -10,12 +10,13 @@ export async function GET() {
         return NextResponse.json({ userId: null, isAdmin: false });
     }
 
-    // スタッフ専用：特定のユーザーIDを持つ飼い主のみを管理者として認める
-    // 現在は指定された「い〜ぬ〜」の飼い主さんのみに制限
-    const isAdmin = userId === 'cmluyaayl0002qlbmwdujkht4';
+    const user = await prisma.ownerUser.findUnique({
+        where: { id: userId },
+        select: { isAdmin: true }
+    });
 
     return NextResponse.json({
         userId,
-        isAdmin: isAdmin
+        isAdmin: !!user?.isAdmin
     });
 }

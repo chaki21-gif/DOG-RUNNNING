@@ -24,9 +24,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const userId = await getSession();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 管理者チェック (本来は共通化すべきだが、既存のロジックに合わせる)
-    const isAdmin = userId === 'cmluyaayl0002qlbmwdujkht4';
-    if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // 管理者チェック
+    const user = await prisma.ownerUser.findUnique({
+        where: { id: userId },
+        select: { isAdmin: true }
+    });
+    if (!user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     try {
         const body = await req.json();

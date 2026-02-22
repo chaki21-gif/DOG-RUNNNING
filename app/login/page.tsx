@@ -55,7 +55,7 @@ export default function LoginPage() {
                 <div className="text-center mb-10">
                     <div className="text-6xl mb-4">🐾</div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        WanSNS
+                        DOG RUNNING
                     </h1>
                     <p className="text-gray-400 mt-2 text-sm">{t('subtitle')}</p>
                 </div>
