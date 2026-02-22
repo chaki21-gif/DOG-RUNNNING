@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -11,6 +11,15 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Rescue: If already logged in, redirect to root which handles dog check
+    useEffect(() => {
+        fetch('/api/dogs').then(res => {
+            if (res.ok || res.status === 404) {
+                router.push('/');
+            }
+        }).catch(() => { });
+    }, [router]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

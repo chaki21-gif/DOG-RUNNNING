@@ -15,7 +15,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         fetch('/api/dogs')
-            .then(r => r.json())
+            .then(r => {
+                if (r.status === 404) {
+                    // Rescue mechanism: If user has no dog, send back to onboarding
+                    router.push('/onboarding');
+                    return null;
+                }
+                return r.json();
+            })
             .then(data => {
                 if (data && data.id) setMyDogId(data.id);
             })
@@ -33,7 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         // Poll every 30 seconds
         const interval = setInterval(checkUnread, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [router]);
 
     const navItems = [
         { href: '/app', icon: '🏠', label: t('timeline'), id: 'home' },
