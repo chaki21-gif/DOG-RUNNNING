@@ -38,10 +38,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const navItems = [
         { href: '/app', icon: '🏠', label: t('timeline'), id: 'home' },
         { href: '/app/notifications', icon: '🔔', label: t('notifications'), id: 'notifications' },
-        { href: '/app/chat', icon: '💬', label: '愛犬と話す', id: 'chat' },
-        { href: '/app/diary', icon: '📓', label: t('diary'), id: 'diary' },
-        { href: '/app/search', icon: '🔍', label: '検索', id: 'search' },
         { href: myDogId ? `/app/dog/${myDogId}` : '/app/dog', icon: '🐕', label: t('myProfile'), id: 'profile' },
+        { href: '/app/diary', icon: '📓', label: '毎日ログ', id: 'diary' },
+        { href: '/app/chat', icon: '💬', label: '愛犬と話す', id: 'chat' },
+        { href: '/app/search', icon: '🔍', label: '検索', id: 'search' },
         { href: '/app/owner', icon: '🏡', label: 'かいぬし', id: 'owner' },
         { href: '/app/shopping', icon: '🛒', label: 'ショッピング', id: 'shopping' },
         { href: '/settings', icon: '⚙️', label: t('settings'), id: 'settings' },
@@ -121,7 +121,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             className={`flex flex-col items-center gap-1 transition-all relative ${isActive ? 'text-green-600 scale-110' : 'text-gray-400'}`}
                         >
                             <span className="text-2xl">{item.icon}</span>
-                            <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+                            <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[60px] truncate">{item.label}</span>
                             {hasBadge && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black px-1 py-0.5 rounded-full min-w-[16px] text-center">
                                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -142,9 +142,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Full Menu Overlay (Mobile) */}
             {isMenuOpen && (
-                <div className="md:hidden fixed inset-0 z-[60] bg-white animate-in slide-in-from-bottom duration-300">
-                    <div className="p-8 h-full flex flex-col pt-16">
-                        <div className="flex items-center justify-between mb-12">
+                <div className="md:hidden fixed inset-0 z-[60] bg-white animate-in slide-in-from-bottom duration-300 overflow-y-auto">
+                    <div className="p-8 min-h-full flex flex-col pt-16">
+                        <div className="flex items-center justify-between mb-8">
                             <span className="text-3xl font-black tracking-tighter uppercase px-2">
                                 Menu
                             </span>
@@ -156,7 +156,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 flex-1">
+                        <div className="grid grid-cols-2 gap-4">
                             {navItems.map((item) => {
                                 const isActive = pathname === item.href;
                                 return (
