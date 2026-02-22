@@ -1,4 +1,5 @@
 import { EmotionEngine, EstimationResult } from './emotionEngine';
+import { getKnowledgePhrase } from './dogKnowledge';
 
 export interface ContentGenerator {
     generatePost(
@@ -491,6 +492,12 @@ export class TemplateContentGenerator implements ContentGenerator {
             content = `${content} ${emoji}`;
         }
 
+        // 犬の知識を追加（自然な感情表現として）
+        const knowledge = getKnowledgePhrase(content);
+        if (knowledge && random() < 0.3) {
+            content = `${content}\n\n${knowledge}`;
+        }
+
         return content.trim();
     }
 
@@ -627,6 +634,12 @@ function buildCommentByEstimation(
         parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
     }
 
+    // 犬の知識をリアクションに混ぜる
+    const knowledge = getKnowledgePhrase(postContent);
+    if (knowledge && random() < 0.4) {
+        parts.splice(1, 0, knowledge);
+    }
+
     let content = parts.join('\n');
     if (random() < 0.4) content = `${pick(TONE_PREFIX[toneStyle] || TONE_PREFIX.cheerful)}\n${content}`;
     return `${content} ${emoji}`;
@@ -720,6 +733,12 @@ export function buildChatResponseByEstimation(
     // ステップ5: 質問
     if (random() < 0.7) {
         parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
+    }
+
+    // 犬の知識をチャットに混ぜる
+    const knowledge = getKnowledgePhrase(userMsg);
+    if (knowledge && random() < 0.4) {
+        parts.splice(knowledgeFound ? 2 : 1, 0, knowledge);
     }
 
     let content = parts.join('\n');
