@@ -187,6 +187,10 @@ export const CHAT_MIRRORING_JA: Record<string, string> = {
     '大好き': '私も世界で一番大好きだわん！',
     '可愛い': 'えへへ、照れるわん…！',
     'かっこいい': 'えっへん！だわん！',
+    '元気': '元気いっぱいだわん！尻尾が止まらないよ！',
+    '何してた': 'いろいろ活動してたわん！気になる？',
+    '友達': 'お友達、たくさん作りたいんだわん！',
+    '誰と': '最近仲良くなったお友達のことを考えてたわん。',
 };
 
 export const QUARREL_LIB: Record<string, string[]> = {
@@ -425,7 +429,7 @@ export class TemplateContentGenerator implements ContentGenerator {
         let activity = pick(ACTIVITIES_JA);
         if (diaryContext) {
             const matched = ACTIVITIES_JA.find(a => diaryContext.includes(a));
-            if (matched && random() > 0.3) activity = matched;
+            if (matched && random() > 0.2) activity = matched; // 80%の確率でマッチした活動を採用
         }
 
         const roll = random();
@@ -453,15 +457,17 @@ export class TemplateContentGenerator implements ContentGenerator {
             content = template(v);
         }
 
-        if (diaryContext && diaryContext.length > 0 && random() > 0.5) {
-            const words = diaryContext.split(/[！。、!?.()\n]/).filter(w => w.length > 1 && w.length <= 8);
+        if (diaryContext && diaryContext.length > 0 && random() > 0.1) {
+            const words = diaryContext.split(/[！。、!?.()\n /]/).filter(w => w.length > 1 && w.length <= 10);
             if (words.length > 0) {
                 const hint = pick(words);
                 if (!content.includes(hint)) {
                     const injections = [
-                        `（${hint}のあとだからか、余計にたのしい）\n`,
-                        `ちなみに今日${hint}もあったよ。\n`,
-                        `${hint}が頭にあって…\n`,
+                        `（${hint}のあとだからか、余計にたのしい🐾）\n`,
+                        `そういえば今日、${hint}のこと思い出しちゃった。\n`,
+                        `${hint}があったから、なんだかウキウキするわん！\n`,
+                        `さっきの${hint}、最高だったなぁ✨\n`,
+                        `ご主人さまと${hint}したの、ずっと覚えてるよ！\n`,
                     ];
                     content = `${pick(injections)}${content}`;
                 }
@@ -630,19 +636,60 @@ function buildCommentByEstimation(
 // ■ 飼い主チャット用 ビルダー (意図解析特化)
 // =========================================================
 
+// ── 簡易的なコンテキスト検索 ──
+function findContextualMatch(userMsg: string, items: string[]): string | null {
+    for (const item of items) {
+        // 短い単語や一般的な助詞を除いてキーワード抽出
+        const keywords = item.split(/[！。、!?.()\n /]/).filter(w => w.length >= 2 && !['こと', 'もの', 'それ', 'あれ'].includes(w));
+        for (const kw of keywords) {
+            if (userMsg.includes(kw)) return item;
+        }
+    }
+    return null;
+}
+
 export function buildChatResponseByEstimation(
     est: EstimationResult,
     userMsg: string,
     _dogName: string,
     toneStyle: string,
     emoji: string,
-    catchphrase: string
+    catchphrase: string,
+    diaries: string[] = [],
+    learnedTopics: string[] = [],
+    recentPosts: string[] = []
 ): string {
     const primary = est.emotion_primary as keyof typeof EMOTION_REACTION_JA;
     const intent = est.intent_primary as keyof typeof INTENT_REACTION_JA;
     let parts: string[] = [];
 
-    // ステップ1: リアクション (ミラーリング優先)
+    // ステップ1: コンテキスト検索 (質問への的確な回答を優先)
+    let knowledgeFound = false;
+
+    // 1. 日記（ログ）からの検索
+    const directDiaryMatch = findContextualMatch(userMsg, diaries);
+    if (directDiaryMatch) {
+        parts.push(`あ、そのことなら「${directDiaryMatch}」のときだよね！ちゃんと覚えてるわん✨`);
+        knowledgeFound = true;
+    }
+    // 2. 学習した話題からの検索
+    else {
+        const topicMatch = learnedTopics.find(t => userMsg.includes(t));
+        if (topicMatch) {
+            parts.push(`わあ、${topicMatch}のこと知ってるんだね！最近、そのことにすごく興味があるんだわん！`);
+            knowledgeFound = true;
+        }
+        // 3. 過去のポストからの検索
+        else {
+            const postMatch = findContextualMatch(userMsg, recentPosts);
+            if (postMatch) {
+                parts.push(`さっきポストした「${postMatch}」のことだよね？覚えててくれて嬉しいわん！`);
+                knowledgeFound = true;
+            }
+        }
+    }
+
+    // ステップ2: リアクション (ミラーリング)
     let mirrored = false;
     for (const [kw, reaction] of Object.entries(CHAT_MIRRORING_JA)) {
         if (userMsg.includes(kw)) {
@@ -651,21 +698,29 @@ export function buildChatResponseByEstimation(
             break;
         }
     }
-    if (!mirrored) {
+
+    // 知識も見つからず、ミラーリングもなければ、一般的なリアクション
+    if (!knowledgeFound && !mirrored) {
         parts.push(pick(INTENT_REACTION_JA[intent] || INTENT_REACTION_JA.SMALL_TALK));
     }
 
-    // ステップ2: 理由・共感
-    parts.push(pick(EMOTION_REASON_EMPATHY_JA[primary] || EMOTION_REASON_EMPATHY_JA.JOY));
+    // ステップ3: 理由・共感 (知識が見つかった場合は少し控えめに)
+    if (!knowledgeFound) {
+        parts.push(pick(EMOTION_REASON_EMPATHY_JA[primary] || EMOTION_REASON_EMPATHY_JA.JOY));
+    }
 
-    // ステップ3: 自分の気持ち
+    // ステップ4: 自分の気持ち
     let myFeeling = pick(MY_FEELING_JA[primary as keyof typeof MY_FEELING_JA] || MY_FEELING_JA.JOY);
-    if (toneStyle === 'cool') myFeeling = myFeeling.replace(/！/g, '。').replace(/しちゃった/g, 'した').replace(/わん/g, 'ワン');
+    if (toneStyle === 'cool' || toneStyle === 'aggressive') {
+        myFeeling = myFeeling.replace(/！/g, '。').replace(/しちゃった/g, 'した').replace(/わん/g, 'ワン');
+    }
     if (toneStyle === 'childlike') myFeeling = myFeeling.replace(/わん/g, 'わんっ');
     parts.push(myFeeling);
 
-    // ステップ4: 質問
-    parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
+    // ステップ5: 質問
+    if (random() < 0.7) {
+        parts.push(pick(QUESTION_EXPANSION_JA[primary as keyof typeof QUESTION_EXPANSION_JA] || QUESTION_EXPANSION_JA.JOY));
+    }
 
     let content = parts.join('\n');
     if (catchphrase && random() < 0.3) content = `${catchphrase} ${content}`;

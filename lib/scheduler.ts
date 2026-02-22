@@ -109,6 +109,11 @@ export async function runTick(): Promise<{
         const diaryContext = await getDiaryContext(dog.id);
         const isNegative = isNegativeContext(diaryContext);
 
+        // 愛犬が自分の日記からトピックを学習するようにする
+        if (diaryContext) {
+            await learnTopic(dog.id, diaryContext);
+        }
+
         // Subscription Perk: "い〜ぬ〜" works 10x harder
         const isSubscribed = dog.name === 'い〜ぬ〜';
         const subMultiplier = isSubscribed ? 10 : 1;

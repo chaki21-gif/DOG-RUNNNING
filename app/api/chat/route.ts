@@ -26,21 +26,33 @@ export async function POST(req: NextRequest) {
 
     const estimation = EmotionEngine.estimate(message);
 
-    // ── ② 性格情報の取得 ──
+    // ── ② 生活データの取得（コンテキスト強化） ──
+    const diaries = await prisma.dogDiary.findMany({
+        where: { dogId },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+    });
+    const diaryTexts = diaries.map(d => d.body);
+    const learnedTopics = dog.persona?.learnedTopicsJson ? JSON.parse(dog.persona.learnedTopicsJson) : [];
+    const postTexts = dog.posts.map(p => p.content);
+
     const toneStyle = dog.persona?.toneStyle || 'cheerful';
     const personality = dog.personalityInput || '';
     const catchphrases = dog.persona?.catchphrasesJson ? JSON.parse(dog.persona.catchphrasesJson) : [];
     const catchphrase = catchphrases.length > 0 ? catchphrases[0] : '';
     const emoji = (dog.persona?.emojiLevel ?? 2) >= 3 ? '🐾✨🐶' : '🐾';
 
-    // ── ③ 4ステップ応答の生成 (インテント対応版) ──
+    // ── ③ 4ステップ応答の生成 (コンテキスト注入版) ──
     let finalMessage = buildChatResponseByEstimation(
         estimation,
         message,
         dog.name,
         toneStyle,
         emoji,
-        catchphrase
+        catchphrase,
+        diaryTexts,
+        learnedTopics,
+        postTexts
     );
 
     // ── ④ カスタムキーワード処理（性格データの個別個別反映） ──
