@@ -51,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         { href: '/app/search', icon: '🔍', label: '検索', id: 'search' },
         { href: '/app/owner', icon: '🏡', label: 'かいぬし', id: 'owner' },
         { href: '/app/shopping', icon: '🛒', label: 'ショッピング', id: 'shopping' },
+        { href: '/app/how-to-use', icon: '📖', label: '使い方', id: 'how-to-use' },
         { href: '/settings', icon: '⚙️', label: t('settings'), id: 'settings' },
     ];
 
