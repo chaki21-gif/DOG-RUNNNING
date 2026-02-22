@@ -18,6 +18,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ id: user.id, email: user.email, language: user.language });
     } catch (err: any) {
         console.error('LOGIN ERROR:', err);
-        return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+        const hasUrl = !!process.env.DATABASE_URL;
+        return NextResponse.json({
+            error: 'Internal server error',
+            details: err.message,
+            debug: {
+                dbUrlDefined: hasUrl,
+                nodeEnv: process.env.NODE_ENV
+            }
+        }, { status: 500 });
     }
 }

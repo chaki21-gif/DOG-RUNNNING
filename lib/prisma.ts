@@ -12,7 +12,11 @@ let prismaInstance: PrismaClient;
 if (globalForPrisma.prisma_v2) {
     prismaInstance = globalForPrisma.prisma_v2;
 } else {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+        console.error('CRITICAL ERROR: DATABASE_URL is not defined in environment variables!');
+    }
+    const pool = new Pool({ connectionString: dbUrl });
     const adapter = new PrismaPg(pool);
     prismaInstance = new PrismaClient({
         adapter,
