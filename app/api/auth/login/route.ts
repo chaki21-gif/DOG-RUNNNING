@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
 
         await setSessionCookie(user.id);
         return NextResponse.json({ id: user.id, email: user.email, language: user.language });
-    } catch {
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } catch (err: any) {
+        console.error('LOGIN ERROR:', err);
+        return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
     }
 }

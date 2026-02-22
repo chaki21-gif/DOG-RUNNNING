@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
-    } catch {
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } catch (err: any) {
+        console.error('SIGNUP ERROR:', err);
+        return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
     }
 }
