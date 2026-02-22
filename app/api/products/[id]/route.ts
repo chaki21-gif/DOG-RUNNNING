@@ -5,8 +5,8 @@ import { getSession } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 // GET /api/products/[id] - 特定の商品取得
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     try {
         const product = await (prisma as any).product.findUnique({
             where: { id },
@@ -19,8 +19,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PATCH /api/products/[id] - 商品更新
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-    const { id } = params;
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const userId = await getSession();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
