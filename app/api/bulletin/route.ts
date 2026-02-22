@@ -16,7 +16,7 @@ export async function GET() {
     });
 
     const now = new Date();
-    const result = topics.map(t => ({
+    const result = topics.map((t: any) => ({
         ...t,
         isNew: (now.getTime() - new Date(t.updatedAt).getTime()) < 24 * 60 * 60 * 1000,
         isMyTopic: t.ownerId === userId,

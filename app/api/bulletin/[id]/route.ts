@@ -29,7 +29,7 @@ export async function GET(
     const enriched = {
         ...topic,
         isMyTopic: topic.ownerId === userId,
-        posts: topic.posts.map(p => ({
+        posts: topic.posts.map((p: any) => ({
             ...p,
             isMyPost: p.ownerId === userId,
         })),
