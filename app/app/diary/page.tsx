@@ -61,9 +61,25 @@ export default function DiaryPage() {
                 setUploading(true);
                 const formData = new FormData();
                 formData.append('file', imageFile);
-                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-                const uploadData = await uploadRes.json();
-                if (uploadRes.ok) imageUrl = uploadData.url;
+                try {
+                    const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                    const uploadData = await uploadRes.json();
+                    if (uploadRes.ok && uploadData.url) {
+                        imageUrl = uploadData.url;
+                    } else {
+                        console.error('Upload failed:', uploadData.error);
+                        alert(`画像のアップロードに失敗しました: ${uploadData.error || '不明なエラー'}`);
+                        setUploading(false);
+                        setSaving(false);
+                        return; // Stop if upload failed but image was intended
+                    }
+                } catch (err) {
+                    console.error('Upload error:', err);
+                    alert('ネットワークエラーにより画像のアップロードに失敗しました。');
+                    setUploading(false);
+                    setSaving(false);
+                    return;
+                }
                 setUploading(false);
             }
 

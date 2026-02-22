@@ -24,7 +24,11 @@ export async function GET(req: NextRequest) {
     try {
         const products = await (prisma as any).product.findMany({
             where: category && category !== 'all' ? { category } : {},
-            orderBy: { createdAt: 'desc' },
+            orderBy: [
+                { isFeatured: 'desc' },
+                { displayOrder: 'asc' },
+                { createdAt: 'desc' },
+            ],
         });
 
         return NextResponse.json(products || []);
@@ -48,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { title, description, amazonUrl, category, price, imageUrl: bodyImageUrl } = body;
+        const { title, description, amazonUrl, category, price, imageUrl: bodyImageUrl, isFeatured, displayOrder } = body;
 
         if (!title || !amazonUrl || !category) {
             return NextResponse.json({ error: '必須項目が不足しています。' }, { status: 400 });
@@ -65,6 +69,8 @@ export async function POST(req: NextRequest) {
                 imageUrl,
                 category,
                 price: price || '',
+                isFeatured: isFeatured === true,
+                displayOrder: typeof displayOrder === 'number' ? displayOrder : 0,
             },
         });
 

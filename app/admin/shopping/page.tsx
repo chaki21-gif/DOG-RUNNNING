@@ -10,6 +10,8 @@ interface Product {
     imageUrl: string;
     category: string;
     price: string;
+    isFeatured: boolean;
+    displayOrder: number;
     createdAt: string;
 }
 
@@ -88,8 +90,8 @@ export default function AdminShoppingPage() {
                     <p className="text-3xl font-black text-slate-900">{products.length}</p>
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Categories</p>
-                    <p className="text-3xl font-black text-slate-900">{Object.keys(CATEGORIES).length}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Featured items</p>
+                    <p className="text-3xl font-black text-blue-500">{products.filter(p => p.isFeatured).length}</p>
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Deals</p>
@@ -104,16 +106,17 @@ export default function AdminShoppingPage() {
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-100">
                                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">商品</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">おすすめ</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">表示順</th>
                                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">価格</th>
                                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリ</th>
-                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">登録日</th>
                                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">操作</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {products.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-8 py-20 text-center text-slate-400 font-bold">
+                                    <td colSpan={6} className="px-8 py-20 text-center text-slate-400 font-bold">
                                         まだ登録された商品がありません。新しいおすすめを追加しましょう！🐾
                                     </td>
                                 </tr>
@@ -129,30 +132,47 @@ export default function AdminShoppingPage() {
                                                         <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
                                                     )}
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="font-bold text-slate-900 line-clamp-1">{p.title}</p>
                                                     <a href={p.amazonUrl} target="_blank" rel="noopener" className="text-[10px] text-orange-500 font-bold hover:underline">Amazon 🔗</a>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-bold text-slate-900">{p.price || '---'}</span>
+                                        <td className="px-8 py-6 text-center">
+                                            {p.isFeatured ? (
+                                                <span className="inline-flex items-center justify-center bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black border border-blue-100">✨ おすすめ</span>
+                                            ) : (
+                                                <span className="text-slate-300 text-[10px] font-bold">---</span>
+                                            )}
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                                                {CATEGORIES[p.category] || p.category}
+                                        <td className="px-8 py-6 text-center">
+                                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black border border-slate-200">
+                                                {p.displayOrder}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="text-xs font-bold text-slate-400">{new Date(p.createdAt).toLocaleDateString()}</span>
+                                            <span className="font-bold text-slate-700 text-sm whitespace-nowrap">{p.price || '---'}</span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap">
+                                                {CATEGORIES[p.category] || p.category}
+                                            </span>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <button
-                                                onClick={() => handleDelete(p.id, p.title)}
-                                                className="text-red-400 hover:text-red-600 font-bold text-sm transition-colors p-2 hover:bg-red-50 rounded-xl"
-                                            >
-                                                削除
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link
+                                                    href={`/admin/shopping/edit/${p.id}`}
+                                                    className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors"
+                                                >
+                                                    編集
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDelete(p.id, p.title)}
+                                                    className="bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                                                >
+                                                    削除
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

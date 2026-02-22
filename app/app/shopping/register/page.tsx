@@ -24,6 +24,8 @@ export default function ProductRegisterPage() {
         category: 'food',
         price: '',
         imageUrl: '',
+        isFeatured: false,
+        displayOrder: 0,
     });
 
     const fetchMetadata = async () => {
@@ -77,7 +79,7 @@ export default function ProductRegisterPage() {
 
             if (res.ok) {
                 alert('商品を登録しました！ワン！🐾');
-                router.push('/app/shopping');
+                router.push('/admin/shopping');
             } else {
                 const data = await res.json();
                 alert(`エラー: ${data.error}`);
@@ -188,6 +190,29 @@ export default function ProductRegisterPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="flex items-center gap-4 bg-orange-50 p-6 rounded-[1.5rem] border-2 border-orange-100">
+                            <label className="flex-1 text-xs font-black text-orange-900 uppercase tracking-widest cursor-pointer select-none">
+                                ✨ おすすめ商品として表示
+                            </label>
+                            <input
+                                type="checkbox"
+                                checked={form.isFeatured}
+                                onChange={e => setForm({ ...form, isFeatured: e.target.checked })}
+                                className="w-6 h-6 rounded-lg text-orange-500 focus:ring-orange-400 border-orange-200 cursor-pointer"
+                            />
+                        </div>
+                        <div className="bg-gray-50 p-2 px-6 rounded-[1.5rem] border-2 border-transparent focus-within:bg-white focus-within:border-orange-400 transition-all">
+                            <label className="text-[11px] font-black text-gray-400 mb-1 block uppercase tracking-widest">並び順 (数字が小さいほど先)</label>
+                            <input
+                                type="number"
+                                value={form.displayOrder}
+                                onChange={e => setForm({ ...form, displayOrder: parseInt(e.target.value) || 0 })}
+                                className="w-full bg-transparent border-none p-0 text-base font-bold text-gray-800 focus:ring-0"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">カテゴリ</label>
                             <div className="relative">
@@ -206,7 +231,7 @@ export default function ProductRegisterPage() {
                             </div>
                         </div>
                         <div>
-                            <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">表示価格（参考）</label>
+                            <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">価格（参考価格として表示）</label>
                             <input
                                 type="text"
                                 value={form.price}

@@ -215,6 +215,8 @@ model Product {
   imageUrl    String?
   category    String   // 'food', 'toy', 'goods', 'health' など
   price       String?
+  isFeatured  Boolean  @default(false)
+  displayOrder Int     @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -366,6 +366,40 @@ export async function runTick(): Promise<{
         }
     }
 
+    // --- Buzz System: バズの発生と通知 ---
+    // 最近（24時間以内）の投稿で、いいねが3つ以上あり、まだバズ通知していないものを探す
+    // ※ MVPなので閾値を低めに設定
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const candidateBuzzPosts = await prisma.post.findMany({
+        where: {
+            createdAt: { gte: dayAgo },
+            likes: { some: {} }, // 少なくとも1つはいいねがある
+        },
+        include: {
+            _count: { select: { likes: true, reposts: true } },
+            notifications: { where: { type: 'buzz' } }
+        },
+        take: 20
+    });
+
+    for (const post of candidateBuzzPosts) {
+        // いいねが3つ以上 且つ バズ通知がまだ
+        if (post._count.likes >= 3 && post.notifications.length === 0) {
+            await createNotification(post.dogId, 'buzz', post.id, post.dogId); // 便宜上 fromDogId は自分
+
+            // バズった投稿にはさらにランダムな追い打ちいいね/リポストを発生させる (模擬的な拡散)
+            const randomDogs = dogs.filter(d => d.id !== post.dogId).sort(() => Math.random() - 0.5).slice(0, 3);
+            for (const d of randomDogs) {
+                try {
+                    await prisma.like.create({ data: { dogId: d.id, postId: post.id } });
+                    if (Math.random() < 0.5) {
+                        await prisma.repost.create({ data: { dogId: d.id, postId: post.id } });
+                    }
+                } catch (e) { /* ignore duplicates */ }
+            }
+        }
+    }
+
     return stats;
 }
 

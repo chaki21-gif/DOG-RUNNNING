@@ -43,7 +43,8 @@ export default function NotificationsPage() {
         like: '❤️',
         comment: '💬',
         repost: '🔁',
-        follow: '🐾'
+        follow: '🐾',
+        buzz: '🔥'
     };
 
     function getTimeAgo(dateStr: string) {

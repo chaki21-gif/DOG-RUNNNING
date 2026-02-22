@@ -95,6 +95,9 @@ export default function ShoppingPage() {
             <div className="bg-gradient-to-r from-orange-400 to-amber-500 pt-10 pb-20 px-6 text-white rounded-b-[3rem] shadow-lg mb-8 relative">
                 <p className="text-[10px] text-white/70 mb-2 font-medium">※当ページには広告（Amazonアソシエイトリンク）が含まれています。</p>
                 <h1 className="text-3xl font-bold mb-2 text-center md:text-left">Dog Shopping 🛍️</h1>
+                <p className="text-xs text-white/80 font-bold bg-white/10 p-3 rounded-2xl border border-white/20 mt-4 backdrop-blur-sm">
+                    ⚠️ 価格は参考価格です。実際の価格はサイトにてご確認ください。
+                </p>
 
                 {isAdmin && (
                     <div className="flex justify-center md:justify-start mt-6">
@@ -148,7 +151,7 @@ export default function ShoppingPage() {
                                     )}
                                     {product.price && (
                                         <div className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                                            {product.price}
+                                            参考価格: {product.price}
                                         </div>
                                     )}
                                 </div>
