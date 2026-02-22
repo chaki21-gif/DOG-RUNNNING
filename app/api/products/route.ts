@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { title, description, amazonUrl, category, price } = body;
+        const { title, description, amazonUrl, category, price, imageUrl: bodyImageUrl } = body;
 
         if (!title || !amazonUrl || !category) {
             return NextResponse.json({ error: '必須項目が不足しています。' }, { status: 400 });
         }
 
         const asin = extractAsin(amazonUrl);
-        const imageUrl = asin ? `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg` : null;
+        const imageUrl = bodyImageUrl || (asin ? `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg` : null);
 
         const product = await (prisma as any).product.create({
             data: {

@@ -23,7 +23,29 @@ export default function ProductRegisterPage() {
         amazonUrl: '',
         category: 'food',
         price: '',
+        imageUrl: '',
     });
+
+    const fetchMetadata = async () => {
+        if (!form.amazonUrl) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/products/metadata?url=${encodeURIComponent(form.amazonUrl)}`);
+            if (res.ok) {
+                const data = await res.json();
+                setForm(prev => ({
+                    ...prev,
+                    title: data.title || prev.title,
+                    price: data.price || prev.price,
+                    imageUrl: data.imageUrl || prev.imageUrl
+                }));
+            }
+        } catch (err) {
+            console.error('Fetch metadata failed:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -125,19 +147,44 @@ export default function ProductRegisterPage() {
                     </div>
 
                     <div>
-                        <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">Amazon URL</label>
-                        <input
-                            type="url"
-                            required
-                            value={form.amazonUrl}
-                            onChange={e => setForm({ ...form, amazonUrl: e.target.value })}
-                            placeholder="https://www.amazon.co.jp/..."
-                            className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 text-sm font-bold text-gray-800 transition-all focus:bg-white focus:border-orange-400 focus:ring-4 focus:ring-orange-400/10 placeholder-gray-300"
-                        />
+                        <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">Amazon URL（または商品ページのURL）</label>
+                        <div className="flex gap-3">
+                            <input
+                                type="url"
+                                required
+                                value={form.amazonUrl}
+                                onChange={e => setForm({ ...form, amazonUrl: e.target.value })}
+                                placeholder="https://www.amazon.co.jp/..."
+                                className="flex-1 bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 text-sm font-bold text-gray-800 transition-all focus:bg-white focus:border-orange-400 focus:ring-4 focus:ring-orange-400/10 placeholder-gray-300"
+                            />
+                            <button
+                                type="button"
+                                onClick={fetchMetadata}
+                                className="bg-orange-100 text-orange-600 px-6 rounded-[1.5rem] font-black text-xs hover:bg-orange-200 transition-colors whitespace-nowrap"
+                            >
+                                情報取得 ✨
+                            </button>
+                        </div>
                         <div className="flex items-center gap-2 mt-3 ml-1">
                             <span className="flex h-2 w-2 rounded-full bg-orange-400 animate-pulse"></span>
-                            <p className="text-[10px] font-bold text-gray-400">画像、説明文はAmazonから自動魔法で取得されます ✨</p>
+                            <p className="text-[10px] font-bold text-gray-400">URLを入力して「情報取得」を押すと、タイトル・画像・価格を魔法で埋めます</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="text-[11px] font-black text-gray-400 mb-2 ml-1 block uppercase tracking-widest">商品画像URL</label>
+                        <input
+                            type="text"
+                            value={form.imageUrl}
+                            onChange={e => setForm({ ...form, imageUrl: e.target.value })}
+                            placeholder="https://..."
+                            className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 text-xs font-bold text-gray-800 transition-all focus:bg-white focus:border-orange-400"
+                        />
+                        {form.imageUrl && (
+                            <div className="mt-4 p-2 bg-gray-50 rounded-2xl flex justify-center">
+                                <img src={form.imageUrl} alt="Preview" className="h-32 object-contain" />
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
