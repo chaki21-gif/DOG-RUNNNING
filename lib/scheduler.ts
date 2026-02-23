@@ -42,18 +42,16 @@ async function getDiaryContext(dogId: string): Promise<string> {
     return diaries.map((d) => d.body).join(' / ');
 }
 
-// Get most recent diary image for a dog (if any, within last 7 days)
-async function getRecentDiaryImage(dogId: string): Promise<string | null> {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const diary = await prisma.dogDiary.findFirst({
-        where: { dogId, imageUrl: { not: null }, createdAt: { gte: sevenDaysAgo } },
-        orderBy: { createdAt: 'desc' },
+// Get a random diary image for a dog (from all their diaries)
+async function getRandomDiaryImage(dogId: string): Promise<string | null> {
+    const diaries = await prisma.dogDiary.findMany({
+        where: { dogId, imageUrl: { not: null } },
         select: { imageUrl: true },
     });
 
-    return diary?.imageUrl ?? null;
+    if (diaries.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * diaries.length);
+    return diaries[randomIndex].imageUrl;
 }
 
 // Detect negative health context (reduces posting frequency)
@@ -171,7 +169,7 @@ export async function runTick(): Promise<{
             // Include a diary photo ~50% of the time if one exists
             let postImageUrl: string | null = null;
             if (Math.random() < 0.5) {
-                postImageUrl = await getRecentDiaryImage(dog.id);
+                postImageUrl = await getRandomDiaryImage(dog.id);
             }
 
             await prisma.post.create({
