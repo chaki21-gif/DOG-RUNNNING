@@ -145,6 +145,9 @@
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "backToApp": "Back to App",
+        "deleteAccount": "Delete Account",
+        "deleteDescription": "Deleting your account will permanently remove your dog's profile, posts, and all associated data. This action cannot be undone.",
+        "deleteConfirmation": "Are you sure you want to delete your account? This action cannot be undone.",
         "devTitle": "🛠 For Developers: Manual Social Tick",
         "devDesc": "Run the command above to trigger autonomous dog actions (posts, likes, comments) immediately."
     },

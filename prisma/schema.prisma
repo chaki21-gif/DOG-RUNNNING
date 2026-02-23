@@ -39,7 +39,7 @@ model Dog {
   createdAt        DateTime       @default(now())
   iconUrl          String?
   comments         Comment[]
-  owner            OwnerUser      @relation(fields: [ownerId], references: [id])
+  owner            OwnerUser      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   diaries          DogDiary[]
   persona          DogPersona?
   followers        Follow[]       @relation("Followed")
@@ -54,8 +54,8 @@ model Follow {
   followerId String
   followedId String
   createdAt  DateTime @default(now())
-  followed   Dog      @relation("Followed", fields: [followedId], references: [id])
-  follower   Dog      @relation("Follower", fields: [followerId], references: [id])
+  followed   Dog      @relation("Followed", fields: [followedId], references: [id], onDelete: Cascade)
+  follower   Dog      @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followedId])
 }
@@ -76,7 +76,7 @@ model DogPersona {
   learnedTopicsJson String   @default("[]")
   intelligence      Int      @default(5)
   updatedAt         DateTime @updatedAt
-  dog               Dog      @relation(fields: [dogId], references: [id])
+  dog               Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
 }
 
 model DogDiary {
@@ -88,8 +88,8 @@ model DogDiary {
   summary   String    @default("")
   imageUrl  String?
   createdAt DateTime  @default(now())
-  dog       Dog       @relation(fields: [dogId], references: [id])
-  owner     OwnerUser @relation(fields: [ownerId], references: [id])
+  dog       Dog       @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  owner     OwnerUser @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model Post {
@@ -102,7 +102,7 @@ model Post {
   comments      Comment[]
   likes         Like[]
   notifications Notification[]
-  dog           Dog            @relation(fields: [dogId], references: [id])
+  dog           Dog            @relation(fields: [dogId], references: [id], onDelete: Cascade)
   reposts       Repost[]
 }
 
@@ -110,8 +110,8 @@ model Like {
   dogId     String
   postId    String
   createdAt DateTime @default(now())
-  dog       Dog      @relation(fields: [dogId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([dogId, postId])
 }
@@ -123,16 +123,16 @@ model Comment {
   content   String
   language  String   @default("ja")
   createdAt DateTime @default(now())
-  dog       Dog      @relation(fields: [dogId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 model Repost {
   dogId     String
   postId    String
   createdAt DateTime @default(now())
-  dog       Dog      @relation(fields: [dogId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  dog       Dog      @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([dogId, postId])
 }
@@ -145,9 +145,9 @@ model Notification {
   fromDogId String
   createdAt DateTime  @default(now())
   readAt    DateTime?
-  fromDog   Dog       @relation("FromDog", fields: [fromDogId], references: [id])
-  owner     OwnerUser @relation(fields: [ownerId], references: [id])
-  post      Post?     @relation(fields: [postId], references: [id])
+  fromDog   Dog       @relation("FromDog", fields: [fromDogId], references: [id], onDelete: Cascade)
+  owner     OwnerUser @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  post      Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 model Friendship {
@@ -157,8 +157,8 @@ model Friendship {
   status    String    @default("PENDING")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  userA     OwnerUser @relation("FriendshipA", fields: [userAId], references: [id])
-  userB     OwnerUser @relation("FriendshipB", fields: [userBId], references: [id])
+  userA     OwnerUser @relation("FriendshipA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     OwnerUser @relation("FriendshipB", fields: [userBId], references: [id], onDelete: Cascade)
 
   @@unique([userAId, userBId])
 }
@@ -171,7 +171,7 @@ model NotificationSetting {
   notifyFollow  Boolean   @default(true)
   notifyFriend  Boolean   @default(true)
   notifyBuzz    Boolean   @default(true)
-  owner         OwnerUser @relation(fields: [ownerId], references: [id])
+  owner         OwnerUser @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model OwnerFriend {
@@ -180,8 +180,8 @@ model OwnerFriend {
   friendId  String
   memo      String    @default("")
   createdAt DateTime  @default(now())
-  friend    OwnerUser @relation("OwnerFriendFriend", fields: [friendId], references: [id])
-  owner     OwnerUser @relation("OwnerFriendOwner", fields: [ownerId], references: [id])
+  friend    OwnerUser @relation("OwnerFriendFriend", fields: [friendId], references: [id], onDelete: Cascade)
+  owner     OwnerUser @relation("OwnerFriendOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@unique([ownerId, friendId])
 }
@@ -195,7 +195,7 @@ model BulletinTopic {
   updatedAt DateTime       @updatedAt
   pinned    Boolean        @default(false)
   posts     BulletinPost[]
-  owner     OwnerUser      @relation(fields: [ownerId], references: [id])
+  owner     OwnerUser      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model BulletinPost {
@@ -204,7 +204,7 @@ model BulletinPost {
   ownerId   String
   content   String
   createdAt DateTime      @default(now())
-  owner     OwnerUser     @relation(fields: [ownerId], references: [id])
+  owner     OwnerUser     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   topic     BulletinTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
 }
 

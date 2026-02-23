@@ -141,7 +141,10 @@
     "newPassword": "新しいパスワード",
     "backToApp": "アプリに戻る",
     "preferences": "基本設定",
-    "updateAccount": "アカウントを更新する"
+    "updateAccount": "アカウントを更新する",
+    "deleteAccount": "アカウントの削除",
+    "deleteDescription": "アカウントを削除すると、愛犬のプロフィール、投稿、すべてのデータが完全に削除され、元に戻すことはできません。",
+    "deleteConfirmation": "本当にアカウントを削除しますか？この操作は取り消せません。"
   },
   "diary": {
     "title": "毎日ログ",

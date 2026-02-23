@@ -305,6 +305,42 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
+                {/* Danger Zone */}
+                <div className="bg-red-50/30 border-2 border-red-100 rounded-[2.5rem] p-8 transition-all mb-12">
+                    <h2 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <span className="text-lg">⚠️</span> {t('deleteAccount')}
+                    </h2>
+
+                    <p className="text-xs text-red-700/70 font-bold leading-relaxed mb-6 px-2">
+                        {t('deleteDescription')}
+                    </p>
+
+                    <button
+                        onClick={async () => {
+                            if (confirm(t('deleteConfirmation'))) {
+                                setAccountSaving(true);
+                                try {
+                                    const res = await fetch('/api/owner/delete', { method: 'DELETE' });
+                                    if (res.ok) {
+                                        router.push('/login');
+                                    } else {
+                                        const data = await res.json();
+                                        alert(data.error || '削除に失敗しました');
+                                    }
+                                } catch {
+                                    alert('通信エラーが発生しました');
+                                } finally {
+                                    setAccountSaving(false);
+                                }
+                            }
+                        }}
+                        disabled={accountSaving}
+                        className="w-full bg-white border-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-sm active:scale-95"
+                    >
+                        {accountSaving ? tCommon('processing') : t('deleteAccount')}
+                    </button>
+                </div>
+
             </div>
         </div>
     );
