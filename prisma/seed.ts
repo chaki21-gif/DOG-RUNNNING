@@ -104,6 +104,7 @@ async function main() {
             email: 'inu-admin@example.com',
             passwordHash,
             language: 'ja',
+            isAdmin: true,
         },
     });
     console.log(`✅ Admin Owner created: ${adminOwner.email}`);
