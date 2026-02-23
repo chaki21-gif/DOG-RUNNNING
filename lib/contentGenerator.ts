@@ -1,5 +1,6 @@
 import { EmotionEngine, EstimationResult } from './emotionEngine';
 import { getKnowledgePhrase } from './dogKnowledge';
+import { addSpeechStyle, boostTrendGobi } from './speechStyle';
 
 export interface ContentGenerator {
     generatePost(
@@ -11,7 +12,8 @@ export interface ContentGenerator {
         topics: string[],
         catchphrases: string[],
         diaryContext: string,
-        lang: string
+        lang: string,
+        followingBreeds?: string[]
     ): Promise<string>;
 
     generateComment(
@@ -21,7 +23,9 @@ export interface ContentGenerator {
         targetPostContent: string,
         lang: string,
         commenterDiaryContext?: string,
-        commenterLearnedTopics?: string[]
+        commenterLearnedTopics?: string[],
+        commenterBreed?: string,
+        followingBreeds?: string[]
     ): Promise<string>;
 
     generateAiAnalysisReport(
@@ -418,14 +422,15 @@ const ADJ_JA = ['ふわふわ', 'きらきら', 'ぽかぽか', 'もふもふ', 
 export class TemplateContentGenerator implements ContentGenerator {
     async generatePost(
         dogName: string,
-        _breed: string,
+        breed: string,
         toneStyle: string,
         emojiLevel: number,
         bio: string,
         topics: string[],
         _catchphrases: string[],
         diaryContext: string,
-        lang: string
+        lang: string,
+        followingBreeds: string[] = []
     ): Promise<string> {
 
         if (lang !== 'ja') {
@@ -508,6 +513,14 @@ export class TemplateContentGenerator implements ContentGenerator {
             content = `${content}\n\n${knowledge}`;
         }
 
+        // 犬種別語尾エンジンを適用
+        if (lang === 'ja') {
+            content = addSpeechStyle(content, breed, toneStyle, followingBreeds);
+            // 語尾の流行スコアを促進
+            const gobis = content.match(/[ワンブヒわふぷぐ][！。…]?$/);
+            if (gobis) boostTrendGobi(gobis[0]);
+        }
+
         return content.trim();
     }
 
@@ -569,12 +582,18 @@ export class TemplateContentGenerator implements ContentGenerator {
         postContent: string,
         lang: string = 'ja',
         commenterDiaryContext: string = '',
-        commenterLearnedTopics: string[] = []
+        commenterLearnedTopics: string[] = [],
+        commenterBreed: string = '',
+        followingBreeds: string[] = []
     ): Promise<string> {
         const emoji = getEmoji(emojiLevel);
         if (lang !== 'ja') return this._generateCommentOtherLang(targetDogName, postContent, lang, emoji, toneStyle);
         const estimation = EmotionEngine.estimate(postContent);
         let content = buildCommentByEstimation(estimation, targetDogName, postContent, toneStyle, commenterDiaryContext, commenterLearnedTopics, emoji);
+        // コメントにも語尾エンジン適用
+        if (commenterBreed) {
+            content = addSpeechStyle(content, commenterBreed, toneStyle, followingBreeds);
+        }
         return content.trim();
     }
 

@@ -105,6 +105,17 @@ export async function runTick(): Promise<{
         const catchphrases: string[] = JSON.parse(persona.catchphrasesJson);
         const lang = dog.owner.language;
 
+        // フォロー中の犬種を取得（語尾伝染に使う）
+        let followingBreeds: string[] = [];
+        try {
+            const follows = await (prisma as any).follow.findMany({
+                where: { followerId: dog.id },
+                include: { following: { select: { breed: true } } },
+                take: 10,
+            });
+            followingBreeds = follows.map((f: any) => f.following?.breed).filter(Boolean);
+        } catch { /* ignore if no follow model */ }
+
         // Get diary context
         const diaryContext = await getDiaryContext(dog.id);
         const isNegative = isNegativeContext(diaryContext);
@@ -152,7 +163,8 @@ export async function runTick(): Promise<{
                 topics,
                 catchphrases,
                 diaryContext,
-                lang
+                lang,
+                followingBreeds
             );
 
             // Include a diary photo ~50% of the time if one exists
@@ -271,7 +283,9 @@ export async function runTick(): Promise<{
                     post.content,
                     lang,
                     diaryContext,
-                    JSON.parse(persona.learnedTopicsJson || '[]')
+                    JSON.parse(persona.learnedTopicsJson || '[]'),
+                    dog.breed,
+                    followingBreeds
                 );
 
                 await prisma.comment.create({
@@ -331,7 +345,9 @@ export async function runTick(): Promise<{
                 replyContext,
                 lang,
                 diaryContext,
-                JSON.parse(persona.learnedTopicsJson || '[]')
+                JSON.parse(persona.learnedTopicsJson || '[]'),
+                dog.breed,
+                followingBreeds
             );
 
             await prisma.comment.create({
