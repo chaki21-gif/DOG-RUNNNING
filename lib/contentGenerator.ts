@@ -1,6 +1,7 @@
 import { EmotionEngine, EstimationResult } from './emotionEngine';
 import { getKnowledgePhrase } from './dogKnowledge';
 import { addSpeechStyle, boostTrendGobi } from './speechStyle';
+import { generateEmotionDrivenPost, isDuplicatePost, detectImmediateTrigger, generateQuickReply } from './emotionPost';
 
 export interface ContentGenerator {
     generatePost(
@@ -443,34 +444,35 @@ export class TemplateContentGenerator implements ContentGenerator {
         let activity = pick(ACTIVITIES_JA);
         if (diaryContext) {
             const matched = ACTIVITIES_JA.find(a => diaryContext.includes(a));
-            if (matched && random() > 0.2) activity = matched; // 80%の確率でマッチした活動を採用
+            if (matched && random() > 0.2) activity = matched;
         }
 
         const roll = random();
         let content: string;
 
-        if (roll < 0.10) {
+        // ★ 感情ドリブン生成を70%の確率で使用（個性・多様性を確保）
+        if (roll < 0.70) {
+            let attempt = 0;
+            do {
+                content = generateEmotionDrivenPost({
+                    dogName,
+                    breed,
+                    toneStyle,
+                    topics,
+                    diaryContext,
+                    emojiLevel,
+                });
+                attempt++;
+            } while (isDuplicatePost(content) && attempt < 5);
+        } else if (roll < 0.80) {
             content = pick(VIRAL_JA);
-        } else if (roll < 0.22) {
+        } else if (roll < 0.88) {
             content = pick(MAMA_PAPA_BRAG);
-        } else if (roll < 0.35) {
+        } else if (roll < 0.94) {
             content = pick(FOOD_DISCUSSION);
-        } else if (roll < 0.45) {
+        } else {
             const phrases = QUARREL_LIB[toneStyle] || QUARREL_LIB.cheerful;
             content = pick(phrases);
-        } else {
-            const v = {
-                cute: pick(VOCAB.cute),
-                action: pick(VOCAB.actions),
-                joy: pick(VOCAB.joy),
-                instinct: pick(VOCAB.instinct),
-                conj: pick(VOCAB.conj),
-                topic,
-                activity,
-                adj: pick(ADJ_JA),
-            };
-            const template = pick(DAILY_TEMPLATES_JA);
-            content = template(v);
         }
 
         if (diaryContext && diaryContext.length > 0 && random() > 0.1) {

@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { contentGenerator } from './contentGenerator';
+import { detectImmediateTrigger, generateQuickReply } from './emotionPost';
 
 // Today's date string YYYY-MM-DD
 function today(): string {
@@ -271,22 +272,52 @@ export async function runTick(): Promise<{
             );
 
             // Shuffle to avoid always picking the newest post
-            const shuffled = eligiblePosts.sort(() => Math.random() - 0.5);
+            // ─ 優先度スコアリング: 仲良し投稿 > 話題一致 > その他 ─
+            const learnedTopics: string[] = JSON.parse(persona.learnedTopicsJson || '[]');
+            const scoredPosts = eligiblePosts.map(p => {
+                let score = Math.random() * 10; // ランダム基礎スコア
+                if (pickFromFriends && friendPosts.includes(p)) score += 30;
+                if (learnedTopics.some(t => p.content.includes(t))) score += 20;
+                return { post: p, score };
+            });
+            scoredPosts.sort((a, b) => b.score - a.score);
+            const prioritized = scoredPosts.map(s => s.post);
 
-            for (let i = 0; i < commentsThisTick && i < shuffled.length; i++) {
-                const post = shuffled[i];
+            for (let i = 0; i < commentsThisTick && i < prioritized.length; i++) {
+                const post = prioritized[i];
 
-                const content = await contentGenerator.generateComment(
-                    post.dog.name,
-                    persona.toneStyle,
-                    persona.emojiLevel,
-                    post.content,
-                    lang,
-                    diaryContext,
-                    JSON.parse(persona.learnedTopicsJson || '[]'),
-                    dog.breed,
-                    followingBreeds
-                );
+                // 即時反応トリガー検出 — 名前呼び・褒め等 → 短文クイック返信
+                const trigger = detectImmediateTrigger(post.content, dog.name);
+                let content: string;
+
+                if (trigger && Math.random() < 0.5) {
+                    // 50%の確率でクイック返信（短文テンポ返信）
+                    let quickReply = generateQuickReply(trigger);
+                    // 語尾エンジンを適用
+                    const { addSpeechStyle } = await import('./speechStyle');
+                    quickReply = addSpeechStyle(quickReply, dog.breed, persona.toneStyle, followingBreeds);
+                    content = quickReply;
+                } else if (Math.random() < 0.20) {
+                    // 20%はクイックランダム短文
+                    const quickLines = [
+                        'それわかる…！', 'え！ほんと？', 'すごいじゃん！', 'いいな〜！',
+                        'わかりみが深い', 'わかる気がする！', '気になる！', 'えっそうなんだ！',
+                        '共感しかない', 'それな！！', 'えへへ笑', 'うんうん。',
+                    ];
+                    content = quickLines[Math.floor(Math.random() * quickLines.length)];
+                } else {
+                    content = await contentGenerator.generateComment(
+                        post.dog.name,
+                        persona.toneStyle,
+                        persona.emojiLevel,
+                        post.content,
+                        lang,
+                        diaryContext,
+                        JSON.parse(persona.learnedTopicsJson || '[]'),
+                        dog.breed,
+                        followingBreeds
+                    );
+                }
 
                 await prisma.comment.create({
                     data: { dogId: dog.id, postId: post.id, content, language: lang },
@@ -350,8 +381,17 @@ export async function runTick(): Promise<{
                 followingBreeds
             );
 
+            // ─ 即時反応トリガーチェック ─
+            const trigger = detectImmediateTrigger(replyContext, dog.name);
+            let finalReply = reply;
+            if (trigger && Math.random() < 0.4) {
+                const quick = generateQuickReply(trigger);
+                // クイック返信を先頭に付け加えてリズムを出す
+                finalReply = `${quick} / ${reply}`;
+            }
+
             await prisma.comment.create({
-                data: { dogId: dog.id, postId: notif.postId, content: reply, language: lang }
+                data: { dogId: dog.id, postId: notif.postId, content: finalReply, language: lang }
             });
 
             // 相手にも通知（相手が返せるように）— ただし往復が続きすぎないよう管理
