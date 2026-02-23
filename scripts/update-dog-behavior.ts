@@ -1,21 +1,15 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import path from 'path';
-
-const adapter = new PrismaBetterSqlite3({
-    url: `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`,
-});
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function update() {
     console.log('🚀 Updating dog behavior targets...');
 
     // Target: ~5 actions per hour => ~120 per day
     const newBehavior = {
-        postPerDayTarget: 120,
-        likePerDayTarget: 300,
-        commentPerDayTarget: 100,
-        sharePerDayTarget: 50
+        postPerDayTarget: 15,    // up to 15 posts
+        likePerDayTarget: 100,   // up to 100 likes
+        commentPerDayTarget: 40, // up to 40 comments
+        sharePerDayTarget: 15    // up to 15 reposts
     };
 
     const personas = await prisma.dogPersona.findMany();

@@ -152,8 +152,8 @@ export default function ShoppingPage() {
                                 setSearchQuery('');
                             }}
                             className={`flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-[11px] font-bold transition-all min-w-[56px] ${activeCategory === cat.id
-                                    ? 'bg-orange-500 text-white shadow-md shadow-orange-200 scale-105'
-                                    : 'bg-white text-gray-500 border border-gray-100 active:scale-95'
+                                ? 'bg-orange-500 text-white shadow-md shadow-orange-200 scale-105'
+                                : 'bg-white text-gray-500 border border-gray-100 active:scale-95'
                                 }`}
                         >
                             <span className="text-lg">{cat.icon}</span>
@@ -191,8 +191,8 @@ export default function ShoppingPage() {
                         )}
                     </div>
                 ) : (
-                    /* 2列グリッド: 画面幅が大きい場合は3〜4列に */
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    /* 3列グリッド: 画面幅が大きい場合は4列以上に */
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                         {filteredProducts.map((product) => (
                             <div
                                 key={product.id}
@@ -209,12 +209,6 @@ export default function ShoppingPage() {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
                                     )}
-                                    {/* 価格バッジ */}
-                                    {product.price && (
-                                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
-                                            {product.price}
-                                        </div>
-                                    )}
                                     {/* カテゴリバッジ */}
                                     <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-0.5">
                                         <span>{CATEGORIES.find((c) => c.id === product.category)?.icon ?? '🐾'}</span>
@@ -224,9 +218,14 @@ export default function ShoppingPage() {
 
                                 {/* テキスト・ボタンエリア */}
                                 <div className="p-3 flex flex-col flex-1 gap-2">
-                                    <h3 className="text-xs font-bold text-gray-800 line-clamp-2 flex-1 leading-snug">
+                                    <h3 className="text-[10px] sm:text-xs font-bold text-gray-800 line-clamp-2 leading-snug min-h-[2.4em]">
                                         {product.title}
                                     </h3>
+                                    {product.price && (
+                                        <div className="text-orange-500 font-extrabold text-[13px] sm:text-sm mt-1">
+                                            <span className="text-[10px] mr-0.5 text-orange-400">参考:</span>{product.price}
+                                        </div>
+                                    )}
                                     <a
                                         href={product.amazonUrl}
                                         target="_blank"

@@ -95,7 +95,7 @@ export async function runTick(): Promise<{
     });
 
     // Max comments per post across all dogs: prevents pile-ons
-    const MAX_COMMENTS_PER_POST = 5;
+    const MAX_COMMENTS_PER_POST = 15;
 
     for (const dog of dogs) {
         if (!dog.persona) continue;
@@ -203,7 +203,7 @@ export async function runTick(): Promise<{
         const sociabilityRatio = 0.5 + (persona.sociability / 10);
         const likesThisTick = Math.min(
             likesNeeded,
-            Math.max(2, Math.round((isSubscribed ? 15 : 6) * sociabilityRatio))
+            Math.max(5, Math.round((isSubscribed ? 25 : 12) * sociabilityRatio))
         );
 
         // Separate friends' posts from others
@@ -248,8 +248,8 @@ export async function runTick(): Promise<{
         // Only comment if we haven't done so recently (stagger across ticks)
         const commentsToday = await getDailyCount(dog.id, 'comment');
         const commentsNeeded = Math.max(0, commentTarget - commentsToday);
-        // At most 3–5 new first-comments per tick to spread activity
-        const commentsThisTick = Math.min(commentsNeeded, isSubscribed ? 8 : 4);
+        // At most 10–15 new first-comments per tick to spread activity
+        const commentsThisTick = Math.min(commentsNeeded, isSubscribed ? 15 : 10);
 
         if (commentsThisTick > 0) {
             // Posts this dog already commented on (ever, not just past hour)
@@ -352,11 +352,10 @@ export async function runTick(): Promise<{
                 where: { dogId: dog.id, postId: notif.postId },
             });
 
-            // Increase back-and-forth limit to 5
-            if (myRepliesOnPost >= 5) continue;
+            // Increase back-and-forth limit to 10
+            if (myRepliesOnPost >= 10) continue;
 
-            // 90% chance to reply (very active)
-            if (Math.random() < 0.1) continue;
+            // 100% chance to reply (extremely active)
 
             // 最後のコメント内容を取得（相手の発言に自然につなぐ）
             const lastComment = await prisma.comment.findFirst({
@@ -402,7 +401,7 @@ export async function runTick(): Promise<{
         // --- Repost ---
         const repostsToday = await getDailyCount(dog.id, 'repost');
         const repostsNeeded = Math.max(0, (shareTarget * 2) - repostsToday);
-        const repostsThisTick = Math.min(repostsNeeded, isSubscribed ? 3 : 2);
+        const repostsThisTick = Math.min(repostsNeeded, isSubscribed ? 6 : 4);
 
         for (let i = 0; i < repostsThisTick; i++) {
             if (otherPosts.length === 0) break;

@@ -157,11 +157,11 @@ export function generatePersona(
     // Catchphrases
     const catchphrases = pickN(CATCHPHRASES_JA[toneStyle] || CATCHPHRASES_JA.cheerful, 2, rng);
 
-    // Behavior params - FREQUENCY INCREASED (approx 2x)
-    const postPerDayTarget = Math.min(10, Math.max(2, Math.floor(sociability / 1.5) + Math.floor(rng() * 3)));
-    const likePerDayTarget = Math.min(60, Math.max(10, Math.floor(sociability * 5.0) + Math.floor(rng() * 10)));
-    const commentPerDayTarget = Math.min(20, Math.max(3, Math.floor(curiosity * 1.5) + Math.floor(rng() * 5)));
-    const sharePerDayTarget = Math.min(10, Math.max(1, Math.floor(sociability / 2)));
+    // Behavior params - FREQUENCY INCREASED (approx 3-4x)
+    const postPerDayTarget = Math.min(15, Math.max(3, Math.floor(sociability / 1.2) + Math.floor(rng() * 4)));
+    const likePerDayTarget = Math.min(100, Math.max(20, Math.floor(sociability * 8.0) + Math.floor(rng() * 15)));
+    const commentPerDayTarget = Math.min(40, Math.max(8, Math.floor(curiosity * 2.5) + Math.floor(rng() * 10)));
+    const sharePerDayTarget = Math.min(15, Math.max(3, Math.floor(sociability / 1.5)));
 
     return {
         toneStyle,
