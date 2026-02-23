@@ -429,7 +429,7 @@ export default function DogProfileView() {
                         </div>
 
                         {/* Owner Mention / Family Info */}
-                        {dog.ownerCalling && (
+                        {isOwnProfile && dog.ownerCalling && (
                             <div className="mt-8 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
                                 <div className="absolute inset-0 bg-green-50/50 rounded-[2rem] -rotate-1 transform scale-[1.02]"></div>
                                 <div className="relative bg-white border-2 border-green-100 rounded-[2rem] p-6 shadow-sm shadow-green-100/50">
@@ -486,7 +486,7 @@ export default function DogProfileView() {
                 )}
 
                 {/* AI分析表示（公開用） */}
-                {dog.persona && (
+                {isOwnProfile && dog.persona && (
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50/50 p-6 rounded-[2.5rem] border border-gray-100">
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-end px-1">

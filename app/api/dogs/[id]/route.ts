@@ -36,6 +36,24 @@ export async function GET(
             return NextResponse.json({ error: 'Dog not found' }, { status: 404 });
         }
 
+        // 外部への公開制限：自分の犬以外の場合は機密情報を隠す
+        const userId = await getSession();
+        const isOwner = userId && dog.ownerId === userId;
+
+        if (!isOwner) {
+            (dog as any).ownerCalling = null;
+            (dog as any).personalityInput = null;
+            // 性格の数値データ（分析）も隠すが、bioとtoneStyleは公開情報のままとする
+            if (dog.persona) {
+                (dog.persona as any).sociability = null;
+                (dog.persona as any).curiosity = null;
+                (dog.persona as any).calmness = null;
+                (dog.persona as any).intelligence = null;
+                (dog.persona as any).topicsJson = '[]';
+                (dog.persona as any).behaviorJson = '{}';
+            }
+        }
+
         return NextResponse.json(dog);
     } catch (error) {
         console.error('Error fetching dog profile:', error);
