@@ -14,18 +14,20 @@ interface Product {
 
 const CATEGORIES = [
     { id: 'all', label: 'すべて', icon: '🐾' },
-    { id: 'food', label: 'フード（ごはん）', icon: '🍚' },
+    { id: 'food', label: 'フード', icon: '🍚' },
     { id: 'snack', label: 'おやつ', icon: '🦴' },
     { id: 'toy', label: 'おもちゃ', icon: '🧸' },
-    { id: 'walk', label: 'お散歩グッズ', icon: '🦮' },
-    { id: 'dental', label: 'デンタルケア', icon: '🦷' },
+    { id: 'walk', label: 'お散歩', icon: '🦮' },
+    { id: 'dental', label: 'デンタル', icon: '🦷' },
     { id: 'goods', label: '生活用品', icon: '🎒' },
     { id: 'health', label: 'ヘルスケア', icon: '💊' },
 ];
 
-const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
-    CATEGORIES.map((c) => [c.id, c.label])
-);
+const CATEGORY_LABEL: Record<string, string> = {
+    all: 'すべて', food: 'フード（ごはん）', snack: 'おやつ',
+    toy: 'おもちゃ', walk: 'お散歩グッズ', dental: 'デンタルケア',
+    goods: '生活用品', health: 'ヘルスケア',
+};
 
 export default function ShoppingPage() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -42,7 +44,6 @@ export default function ShoppingPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // activeCategory が変わったら再取得
     useEffect(() => {
         fetchProducts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,7 +63,6 @@ export default function ShoppingPage() {
         }
     };
 
-    // クライアントサイドでのキーワード絞り込み
     const filteredProducts = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
         if (!q) return products;
@@ -78,38 +78,42 @@ export default function ShoppingPage() {
     }, [products, searchQuery]);
 
     return (
-        <div className="pb-24">
-            {/* ヒーローセクション */}
-            <div className="bg-gradient-to-r from-orange-400 to-amber-500 pt-10 pb-20 px-6 text-white rounded-b-[3rem] shadow-lg mb-4 relative">
-                <p className="text-[10px] text-white/70 mb-2 font-medium">
+        /* ── 全幅コンテナ: スクロール可・下ナビ分パディング ── */
+        <div className="w-full min-h-screen bg-gray-50 pb-28">
+
+            {/* ── ヘッダー ── */}
+            <div className="w-full bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400 pt-10 pb-16 px-4 text-white shadow-lg relative overflow-hidden">
+                {/* 装飾サークル */}
+                <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full" />
+                <div className="absolute -bottom-6 left-1/3 w-24 h-24 bg-white/10 rounded-full" />
+
+                <p className="text-[10px] text-white/70 mb-2 font-medium relative z-10">
                     ※当ページには広告（Amazonアソシエイトリンク）が含まれています。
                 </p>
-                <h1 className="text-3xl font-bold mb-2 text-center md:text-left">Dog Shopping 🛍️</h1>
-                <p className="text-xs text-white/80 font-bold bg-white/10 p-3 rounded-2xl border border-white/20 mt-4 backdrop-blur-sm">
-                    ⚠️ 価格は参考価格です。実際の価格はサイトにてご確認ください。
+                <h1 className="text-2xl sm:text-3xl font-black mb-1 relative z-10">
+                    Dog Shopping 🛍️
+                </h1>
+                <p className="text-xs text-white/90 font-medium bg-white/20 px-3 py-2 rounded-2xl border border-white/30 mt-3 backdrop-blur-sm relative z-10 inline-block">
+                    ⚠️ 価格は参考価格。実際の価格はサイトへ
                 </p>
 
                 {isAdmin && (
-                    <div className="flex justify-center md:justify-start mt-6">
+                    <div className="mt-4 relative z-10">
                         <Link
                             href="/app/shopping/register"
-                            className="bg-white text-orange-600 px-6 py-3 rounded-2xl text-sm font-black shadow-xl hover:scale-105 transition-all flex items-center gap-2 border-2 border-orange-100"
+                            className="inline-flex items-center gap-2 bg-white text-orange-600 px-5 py-2.5 rounded-2xl text-sm font-black shadow-lg hover:scale-105 active:scale-95 transition-all"
                         >
-                            <span className="text-xl">✨</span> 商品を新しく登録する
+                            <span>✨</span> 商品を登録する
                         </Link>
                     </div>
                 )}
             </div>
 
-            {/* 🔍 検索バー */}
-            <div className="px-6 mb-4">
-                <div className="relative">
-                    <svg
-                        className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            {/* ── 検索バー ── */}
+            <div className="w-full px-4 -mt-5 relative z-10 mb-3">
+                <div className="bg-white rounded-2xl shadow-md border border-orange-100 flex items-center gap-3 px-4 py-3">
+                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
                     </svg>
                     <input
                         id="shopping-search"
@@ -117,12 +121,12 @@ export default function ShoppingPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="商品名・カテゴリで検索..."
-                        className="w-full bg-white border-2 border-orange-100 rounded-2xl pl-12 pr-10 py-3.5 text-sm font-medium text-gray-800 placeholder-gray-300 focus:outline-none focus:border-orange-400 transition-all shadow-sm"
+                        className="flex-1 min-w-0 text-sm font-medium text-gray-800 placeholder-gray-300 bg-transparent outline-none"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                            className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -131,102 +135,131 @@ export default function ShoppingPage() {
                     )}
                 </div>
                 {searchQuery && (
-                    <p className="text-xs text-gray-400 font-medium mt-2 ml-1">
-                        「{searchQuery}」の検索結果：{filteredProducts.length}件
+                    <p className="text-xs text-gray-400 font-medium mt-1.5 ml-1">
+                        「{searchQuery}」— {filteredProducts.length}件
                     </p>
                 )}
             </div>
 
-            {/* カテゴリタブ */}
-            <div className="px-6 mb-8 overflow-x-auto no-scrollbar flex items-center gap-3 pb-1">
-                {CATEGORIES.map((cat) => (
-                    <button
-                        key={cat.id}
-                        onClick={() => {
-                            setActiveCategory(cat.id);
-                            setSearchQuery('');
-                        }}
-                        className={`flex-shrink-0 px-4 py-3 rounded-2xl text-xs font-bold transition-all flex flex-col items-center gap-1 min-w-[64px] ${activeCategory === cat.id
-                                ? 'bg-orange-500 text-white shadow-md shadow-orange-200 transform scale-105'
-                                : 'bg-white text-gray-500 border border-gray-100'
-                            }`}
-                    >
-                        <span className="text-xl">{cat.icon}</span>
-                        {cat.label}
-                    </button>
-                ))}
+            {/* ── カテゴリタブ（横スクロール） ── */}
+            <div className="w-full overflow-x-auto no-scrollbar px-4 mb-4">
+                <div className="flex gap-2 pb-1" style={{ width: 'max-content' }}>
+                    {CATEGORIES.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => {
+                                setActiveCategory(cat.id);
+                                setSearchQuery('');
+                            }}
+                            className={`flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-[11px] font-bold transition-all min-w-[56px] ${activeCategory === cat.id
+                                    ? 'bg-orange-500 text-white shadow-md shadow-orange-200 scale-105'
+                                    : 'bg-white text-gray-500 border border-gray-100 active:scale-95'
+                                }`}
+                        >
+                            <span className="text-lg">{cat.icon}</span>
+                            <span className="leading-tight text-center">{cat.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* 商品リスト */}
-            <div className="px-6">
+            {/* ── 商品グリッド ── */}
+            <div className="px-4">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-3" />
-                        <p>いいものを探しています...</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400 mb-3" />
+                        <p className="text-sm">いいものを探しています...</p>
                     </div>
                 ) : filteredProducts.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-50 rounded-3xl text-gray-400">
-                        {searchQuery
-                            ? <><p className="text-2xl mb-3">🔍</p><p>「{searchQuery}」に一致する商品が見つかりませんでした</p></>
-                            : <><p>このカテゴリにはまだ商品がありません 🐾</p></>
-                        }
+                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl text-gray-400 mx-0">
+                        {searchQuery ? (
+                            <>
+                                <p className="text-4xl mb-3">🔍</p>
+                                <p className="text-sm font-medium">「{searchQuery}」に一致する商品なし</p>
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="mt-3 text-xs text-orange-500 font-bold"
+                                >
+                                    検索をクリア
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-4xl mb-3">🐾</p>
+                                <p className="text-sm font-medium">このカテゴリにはまだ商品がありません</p>
+                            </>
+                        )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 gap-4">
+                    /* 2列グリッド: 画面幅が大きい場合は3〜4列に */
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {filteredProducts.map((product) => (
-                            <div key={product.id} className="bg-white rounded-[2rem] p-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden mb-3 relative">
+                            <div
+                                key={product.id}
+                                className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md active:scale-[0.98] transition-all flex flex-col"
+                            >
+                                {/* 画像エリア */}
+                                <div className="relative aspect-square bg-gray-50">
                                     {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.title} className="w-full h-full object-contain p-2" />
+                                        <img
+                                            src={product.imageUrl}
+                                            alt={product.title}
+                                            className="w-full h-full object-contain p-2"
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
                                     )}
+                                    {/* 価格バッジ */}
                                     {product.price && (
-                                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
                                             {product.price}
                                         </div>
                                     )}
                                     {/* カテゴリバッジ */}
-                                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
-                                        {CATEGORIES.find((c) => c.id === product.category)?.icon ?? '🐾'}{' '}
-                                        {CATEGORY_LABEL[product.category] ?? product.category}
+                                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full backdrop-blur-sm flex items-center gap-0.5">
+                                        <span>{CATEGORIES.find((c) => c.id === product.category)?.icon ?? '🐾'}</span>
+                                        <span>{CATEGORY_LABEL[product.category] ?? product.category}</span>
                                     </div>
                                 </div>
-                                <h3 className="text-xs font-bold text-gray-800 line-clamp-2 mb-2 h-8">
-                                    {product.title}
-                                </h3>
-                                <a
-                                    href={product.amazonUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block w-full bg-orange-50 text-orange-600 text-center py-2 rounded-xl text-[10px] font-bold hover:bg-orange-100 transition-colors"
-                                >
-                                    Amazonで見る 🔗
-                                </a>
+
+                                {/* テキスト・ボタンエリア */}
+                                <div className="p-3 flex flex-col flex-1 gap-2">
+                                    <h3 className="text-xs font-bold text-gray-800 line-clamp-2 flex-1 leading-snug">
+                                        {product.title}
+                                    </h3>
+                                    <a
+                                        href={product.amazonUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block w-full bg-orange-50 text-orange-600 text-center py-2 rounded-xl text-[10px] font-bold hover:bg-orange-100 active:scale-95 transition-all"
+                                    >
+                                        Amazonで見る 🔗
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* 管理者FAB */}
+            {/* ── 管理者FAB ── */}
             {isAdmin && (
-                <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+                <div className="fixed bottom-24 right-4 z-50 flex flex-col gap-3">
                     <Link
                         href="/admin/shopping"
                         title="管理ダッシュボード"
-                        className="bg-slate-900 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+                        className="bg-slate-800 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-transform"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                     </Link>
                     <Link
                         href="/app/shopping/register"
                         title="商品を追加"
-                        className="bg-orange-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+                        className="bg-orange-500 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-transform group"
                     >
-                        <svg className="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                     </Link>
