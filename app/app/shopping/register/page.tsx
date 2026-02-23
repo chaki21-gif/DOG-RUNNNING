@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const CATEGORIES = [
-    { id: 'food', label: 'ごはん・おやつ' },
+    { id: 'food', label: 'フード（ごはん）' },
+    { id: 'snack', label: 'おやつ' },
     { id: 'toy', label: 'おもちゃ' },
     { id: 'care', label: 'ケア用品' },
     { id: 'fashion', label: '服・アクセサリー' },

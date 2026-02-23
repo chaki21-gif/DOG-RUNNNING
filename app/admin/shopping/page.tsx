@@ -16,7 +16,8 @@ interface Product {
 }
 
 const CATEGORIES: Record<string, string> = {
-    food: 'ごはん・おやつ',
+    food: 'フード（ごはん）',
+    snack: 'おやつ',
     toy: 'おもちゃ',
     care: 'ケア用品',
     fashion: '服・アクセサリー',

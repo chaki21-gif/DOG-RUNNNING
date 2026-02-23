@@ -14,7 +14,8 @@ interface Product {
 
 const CATEGORIES = [
     { id: 'all', label: 'すべて', icon: '🐾' },
-    { id: 'food', label: 'フード・おやつ', icon: '🍖' },
+    { id: 'food', label: 'フード（ごはん）', icon: '🍚' },
+    { id: 'snack', label: 'おやつ', icon: '🦴' },
     { id: 'toy', label: 'おもちゃ', icon: '🧸' },
     { id: 'goods', label: 'お散歩・生活用品', icon: '🎒' },
     { id: 'health', label: 'ヘルスケア', icon: '💊' },
