@@ -2,6 +2,7 @@ import { EmotionEngine, EstimationResult } from './emotionEngine';
 import { getKnowledgePhrase } from './dogKnowledge';
 import { addSpeechStyle, boostTrendGobi } from './speechStyle';
 import { generateEmotionDrivenPost, isDuplicatePost, detectImmediateTrigger, generateQuickReply } from './emotionPost';
+import { getEmotionWord, mapEmotionToCategory } from './emotionVocabulary';
 
 export interface ContentGenerator {
     generatePost(
@@ -667,6 +668,19 @@ function buildCommentByEstimation(
     }
 
     let content = parts.join('\n');
+
+    // ── 感情別ワード拡張 (DOG EMOTION VOCABULARY ENGINE) ──
+    const emoCategory = mapEmotionToCategory(est.emotion_primary);
+    const emotionWord = getEmotionWord(emoCategory);
+    if (emotionWord && random() < 0.6) {
+        const commentWrappers = [
+            (c: string) => `${c} なんだか${emotionWord}な気持ちになっちゃった。`,
+            (c: string) => `${emotionWord}！${c}`,
+            (c: string) => `${c} 本当に${emotionWord}だわん🐾`,
+        ];
+        content = pick(commentWrappers)(content);
+    }
+
     if (random() < 0.4) content = `${pick(TONE_PREFIX[toneStyle] || TONE_PREFIX.cheerful)}\n${content}`;
     return `${content} ${emoji}`;
 }
@@ -768,6 +782,19 @@ export function buildChatResponseByEstimation(
     }
 
     let content = parts.join('\n');
+
+    // ── 感情別ワード拡張 (DOG EMOTION VOCABULARY ENGINE) ──
+    const emoCategory = mapEmotionToCategory(est.emotion_primary);
+    const emotionWord = getEmotionWord(emoCategory);
+    if (emotionWord && random() < 0.7) {
+        const chatWrappers = [
+            (c: string) => `あのね、今は${emotionWord}な気分なんだ✨\n${c}`,
+            (c: string) => `${emotionWord}…🐾\n${c}`,
+            (c: string) => `${c}\nふふ、なんだか${emotionWord}だね。`,
+        ];
+        content = pick(chatWrappers)(content);
+    }
+
     if (catchphrase && random() < 0.3) content = `${catchphrase} ${content}`;
 
     return `${content} ${emoji}`;

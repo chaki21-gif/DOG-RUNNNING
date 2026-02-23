@@ -7,8 +7,9 @@
  */
 
 // ============================================================
-// ■ 感情タイプ
+// ■ 感情ライブラリ
 // ============================================================
+import { getEmotionWord, mapEmotionToCategory } from './emotionVocabulary';
 
 export type CoreEmotion =
     | 'joy'        // 嬉しい・幸せ
@@ -376,6 +377,21 @@ export function generateEmotionDrivenPost(params: EmotionPostParams): string {
     ];
 
     let content = pick(structures)();
+
+    // ── 感情別ワード拡張 (DOG EMOTION VOCABULARY ENGINE) ──
+    const emoCategory = mapEmotionToCategory(emotion);
+    const emotionWord = getEmotionWord(emoCategory);
+
+    // 感情ワードを自然に組み込む
+    if (emotionWord && Math.random() < 0.7) {
+        const injections = [
+            (c: string) => `今、${emotionWord}な気分。${c}`,
+            (c: string) => `${emotionWord}…✨\n${c}`,
+            (c: string) => `${c}\nなんだか${emotionWord}な一日だわん。`,
+            (c: string) => `${c.replace(/[！。]/, '！')} ${emotionWord}！`,
+        ];
+        content = pick(injections)(content);
+    }
 
     // 飼い主の呼び方を反映
     if (ownerCalling) {
