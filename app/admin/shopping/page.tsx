@@ -19,8 +19,10 @@ const CATEGORIES: Record<string, string> = {
     food: 'フード（ごはん）',
     snack: 'おやつ',
     toy: 'おもちゃ',
-    care: 'ケア用品',
-    fashion: '服・アクセサリー',
+    walk: 'お散歩グッズ',
+    dental: 'デンタルケア',
+    goods: '生活用品',
+    health: 'ヘルスケア',
     other: 'その他',
 };
 

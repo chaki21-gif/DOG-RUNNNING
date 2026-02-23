@@ -8,8 +8,10 @@ const CATEGORIES = [
     { id: 'food', label: 'フード（ごはん）' },
     { id: 'snack', label: 'おやつ' },
     { id: 'toy', label: 'おもちゃ' },
-    { id: 'care', label: 'ケア用品' },
-    { id: 'fashion', label: '服・アクセサリー' },
+    { id: 'walk', label: 'お散歩グッズ' },
+    { id: 'dental', label: 'デンタルケア' },
+    { id: 'goods', label: '生活用品' },
+    { id: 'health', label: 'ヘルスケア' },
     { id: 'other', label: 'その他' },
 ];
 
