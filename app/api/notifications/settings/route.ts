@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { notifyLike, notifyComment, notifyFollow, notifyFriend } = body;
+    const { notifyLike, notifyComment, notifyFollow, notifyFriend, notifyBuzz } = body;
 
     const setting = await prisma.notificationSetting.upsert({
         where: { ownerId: userId },
@@ -30,6 +30,7 @@ export async function PATCH(req: NextRequest) {
             ...(notifyComment !== undefined && { notifyComment }),
             ...(notifyFollow !== undefined && { notifyFollow }),
             ...(notifyFriend !== undefined && { notifyFriend }),
+            ...(notifyBuzz !== undefined && { notifyBuzz }),
         },
         create: {
             ownerId: userId,
@@ -37,6 +38,7 @@ export async function PATCH(req: NextRequest) {
             notifyComment: notifyComment ?? true,
             notifyFollow: notifyFollow ?? true,
             notifyFriend: notifyFriend ?? true,
+            notifyBuzz: notifyBuzz ?? true,
         }
     });
     return NextResponse.json(setting);

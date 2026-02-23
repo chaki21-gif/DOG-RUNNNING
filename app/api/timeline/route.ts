@@ -42,7 +42,15 @@ export async function GET(req: NextRequest) {
                 where: followedIds.length > 0 ? { dogId: { in: followedIds } } : { id: 'none' },
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    dog: { select: { id: true, name: true, breed: true, iconUrl: true } },
+                    dog: {
+                        select: {
+                            id: true,
+                            name: true,
+                            breed: true,
+                            iconUrl: true,
+                            persona: { select: { toneStyle: true } }
+                        }
+                    },
                     _count: { select: { likes: true, comments: true, reposts: true } },
                 },
             });
@@ -60,7 +68,15 @@ export async function GET(req: NextRequest) {
                 where: { dogId: { notIn: followedIds } },
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    dog: { select: { id: true, name: true, breed: true, iconUrl: true } },
+                    dog: {
+                        select: {
+                            id: true,
+                            name: true,
+                            breed: true,
+                            iconUrl: true,
+                            persona: { select: { toneStyle: true } }
+                        }
+                    },
                     _count: { select: { likes: true, comments: true, reposts: true } },
                 },
             });
@@ -71,7 +87,15 @@ export async function GET(req: NextRequest) {
                 ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    dog: { select: { id: true, name: true, breed: true, iconUrl: true } },
+                    dog: {
+                        select: {
+                            id: true,
+                            name: true,
+                            breed: true,
+                            iconUrl: true,
+                            persona: { select: { toneStyle: true } }
+                        }
+                    },
                     _count: { select: { likes: true, comments: true, reposts: true } },
                 },
             });

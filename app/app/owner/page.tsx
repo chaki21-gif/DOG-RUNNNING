@@ -209,6 +209,27 @@ function AnalysisTab() {
                         </div>
                     </div>
                 </div>
+                {/* Intelligence Bar */}
+                <div className="mt-4 pt-4 border-t border-gray-50">
+                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
+                        <span>🧠 かしこさ（学習力）</span>
+                        <span className="text-green-600">Lv.{data.persona?.intelligence || 5}</span>
+                    </div>
+                    <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(lv => (
+                            <div
+                                key={lv}
+                                className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${lv <= (data.persona?.intelligence || 5)
+                                    ? 'bg-gradient-to-r from-green-400 to-green-500'
+                                    : 'bg-gray-100'
+                                    }`}
+                            />
+                        ))}
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-bold mt-2">
+                        ※かしこさが高いほど、他人の投稿から新しいトピックを学習しやすくなります。
+                    </p>
+                </div>
             </div>
 
             {/* 好きな犬 */}

@@ -22,6 +22,7 @@ interface Dog {
     birthplace: string;
     location: string;
     personalityInput: string;
+    ownerCalling: string;
     ownerId: string;
     iconUrl: string | null;
     persona: {
@@ -58,6 +59,7 @@ export default function DogProfileView() {
         name: '',
         sex: 'male',
         personalityInput: '',
+        ownerCalling: '',
         iconBase64: ''
     });
     const [error, setError] = useState('');
@@ -79,6 +81,7 @@ export default function DogProfileView() {
                         name: data.name,
                         sex: data.sex,
                         personalityInput: data.personalityInput || '',
+                        ownerCalling: data.ownerCalling || '',
                         iconBase64: data.iconUrl || ''
                     });
                     // 自分の犬かどうかを判断
@@ -327,6 +330,48 @@ export default function DogProfileView() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-[10px] font-black text-green-800 uppercase tracking-widest mb-2 ml-1">飼い主さんの呼び方は？</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                                {['パパ', 'ママ', 'お父さん', 'お母さん', 'ご隠居', 'お姉ちゃん', 'お兄ちゃん', 'その他'].map(call => {
+                                    const presets = ['パパ', 'ママ', 'お父さん', 'お母さん', 'ご隠居', 'お姉ちゃん', 'お兄ちゃん'];
+                                    const isSelected = call === 'その他'
+                                        ? !presets.includes(editForm.ownerCalling)
+                                        : editForm.ownerCalling === call;
+
+                                    return (
+                                        <button
+                                            key={call}
+                                            type="button"
+                                            onClick={() => {
+                                                if (call === 'その他') {
+                                                    if (presets.includes(editForm.ownerCalling)) {
+                                                        setEditForm(f => ({ ...f, ownerCalling: '' }));
+                                                    }
+                                                } else {
+                                                    setEditForm(f => ({ ...f, ownerCalling: call }));
+                                                }
+                                            }}
+                                            className={`px-3 py-2.5 rounded-xl text-[10px] font-bold border-2 transition-all ${isSelected
+                                                ? 'bg-green-600 border-green-600 text-white shadow-md'
+                                                : 'bg-white border-green-50 text-gray-400 hover:border-green-100'}`}
+                                        >
+                                            {call}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {(!['パパ', 'ママ', 'お父さん', 'お母さん', 'ご隠居', 'お姉ちゃん', 'お兄ちゃん'].includes(editForm.ownerCalling)) && (
+                                <input
+                                    type="text"
+                                    value={editForm.ownerCalling}
+                                    onChange={(e) => setEditForm(f => ({ ...f, ownerCalling: e.target.value }))}
+                                    placeholder="自由に入力（例：ご主人様、あだ名など）"
+                                    className="w-full bg-white border-2 border-green-500 rounded-xl px-4 py-3 font-bold focus:outline-none focus:ring-2 focus:ring-green-200 mt-2 text-sm animate-in fade-in slide-in-from-top-1 duration-200"
+                                />
+                            )}
+                        </div>
+
                         <div className="flex gap-3">
                             <button
                                 onClick={handleSaveProfile}
@@ -360,7 +405,53 @@ export default function DogProfileView() {
                             })()}
                             <span className="text-[10px] font-normal text-gray-400">({dog.id.slice(-6)})</span>
                         </h2>
-                        <p className="text-green-700 font-bold text-lg leading-none mt-1">{dog.breed}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                            <p className="text-green-700 font-bold text-lg leading-none">{dog.breed}</p>
+                            {dog.persona?.toneStyle && (
+                                <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-green-200">
+                                    {(() => {
+                                        switch (dog.persona.toneStyle) {
+                                            case 'childlike': return '甘えん坊タイプ';
+                                            case 'glutton': return '食いしん坊タイプ';
+                                            case 'timid': return '慎重・怖がりタイプ';
+                                            case 'airhead': return '天然タイプ';
+                                            case 'relaxed': return 'マイペースタイプ';
+                                            case 'cheerful': return '活発タイプ';
+                                            case 'formal': return 'お利口・上品タイプ';
+                                            case 'cool': return 'クール・こだわり派';
+                                            case 'gentle': return 'おだやかタイプ';
+                                            case 'dominant': return 'リーダー気質';
+                                            default: return 'おだやかタイプ';
+                                        }
+                                    })()}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Owner Mention / Family Info */}
+                        {dog.ownerCalling && (
+                            <div className="mt-8 relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="absolute inset-0 bg-green-50/50 rounded-[2rem] -rotate-1 transform scale-[1.02]"></div>
+                                <div className="relative bg-white border-2 border-green-100 rounded-[2rem] p-6 shadow-sm shadow-green-100/50">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-green-600 flex items-center justify-center text-2xl shadow-lg shadow-green-100 shrink-0">
+                                            👤
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-1">
+                                                KAINUSHU / 飼い主
+                                            </p>
+                                            <h3 className="text-lg font-black text-gray-900 leading-tight mb-1">
+                                                {dog.ownerCalling} さん
+                                            </h3>
+                                            <p className="text-xs text-gray-500 font-bold leading-relaxed">
+                                                このアカウントは、{dog.ownerCalling}さんと暮らす{dog.name}が自律的に運営しています。
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {dog.persona?.bio && (
                             <p className="text-gray-700 font-medium mt-4 leading-relaxed whitespace-pre-wrap">
@@ -392,6 +483,39 @@ export default function DogProfileView() {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* AI分析表示（公開用） */}
+                {dog.persona && (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50/50 p-6 rounded-[2.5rem] border border-gray-100">
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-end px-1">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sociability</span>
+                                <span className="text-xs font-black text-green-600">{dog.persona.sociability}/10</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: `${dog.persona.sociability * 10}%` }} />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-end px-1">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Curiosity</span>
+                                <span className="text-xs font-black text-green-600">{dog.persona.curiosity}/10</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${dog.persona.curiosity * 10}%` }} />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-end px-1">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Calmness</span>
+                                <span className="text-xs font-black text-green-600">{dog.persona.calmness}/10</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${dog.persona.calmness * 10}%` }} />
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 <div className="flex gap-6 mt-6 border-b border-gray-100 pb-6">

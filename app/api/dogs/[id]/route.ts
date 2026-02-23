@@ -58,7 +58,8 @@ export async function PATCH(
         const {
             name, sex, breed, birthday, birthplace, location,
             personalityInput, iconBase64,
-            activityLevel, socialStyle, favoriteRoutine
+            activityLevel, socialStyle, favoriteRoutine,
+            ownerCalling
         } = body;
 
         // 自分の犬か確認
@@ -73,7 +74,7 @@ export async function PATCH(
 
         // 性格等の入力が変わった場合はペルソナを再生成
         let updatedPersonaData = null;
-        if (personalityInput || activityLevel !== undefined || socialStyle || favoriteRoutine) {
+        if (personalityInput || activityLevel !== undefined || socialStyle || favoriteRoutine || ownerCalling) {
             updatedPersonaData = generatePersona(
                 name || dog.name,
                 breed || dog.breed,
@@ -84,7 +85,8 @@ export async function PATCH(
                     activityLevel: activityLevel ?? 5,
                     socialStyle: socialStyle || 'friendly',
                     favoriteRoutine: favoriteRoutine || ''
-                }
+                },
+                ownerCalling || dog.ownerCalling
             );
         }
 
@@ -98,6 +100,7 @@ export async function PATCH(
                 birthplace: birthplace !== undefined ? birthplace : undefined,
                 location: location !== undefined ? location : undefined,
                 personalityInput: personalityInput !== undefined ? personalityInput : undefined,
+                ownerCalling: ownerCalling !== undefined ? ownerCalling : undefined,
                 iconUrl: iconBase64 !== undefined ? iconBase64 : undefined,
                 persona: updatedPersonaData ? {
                     update: {
@@ -106,6 +109,7 @@ export async function PATCH(
                         sociability: updatedPersonaData.sociability,
                         curiosity: updatedPersonaData.curiosity,
                         calmness: updatedPersonaData.calmness,
+                        intelligence: updatedPersonaData.intelligence,
                         bio: updatedPersonaData.bio,
                         topicsJson: JSON.stringify(updatedPersonaData.topics),
                         dislikesJson: JSON.stringify(updatedPersonaData.dislikes),

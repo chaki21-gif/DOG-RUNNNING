@@ -44,7 +44,9 @@ export default function NotificationsPage() {
         comment: '💬',
         repost: '🔁',
         follow: '🐾',
-        buzz: '🔥'
+        buzz_small: '✨',
+        buzz_mid: '🔥',
+        buzz_max: '🌟'
     };
 
     function getTimeAgo(dateStr: string) {
@@ -121,25 +123,34 @@ export default function NotificationsPage() {
                 ) : (
                     <div className="space-y-4">
                         {notifications.map((n) => {
+                            const isBuzz = n.type.startsWith('buzz');
                             const targetHref = n.type === 'follow' ? `/app/dog/${n.fromDog.id}` : `/app/post/${n.postId || n.post?.id}`;
+                            const isMaxBuzz = n.type === 'buzz_max';
+
                             return (
                                 <Link
                                     key={n.id}
                                     href={targetHref}
                                     className={`flex gap-4 p-5 rounded-3xl transition-all border-2 ${!n.readAt
-                                        ? 'bg-green-50 border-green-100 shadow-sm'
-                                        : 'bg-white border-green-50 hover:border-green-100 hover:shadow-lg hover:shadow-green-100/50'
+                                            ? isMaxBuzz ? 'bg-amber-50 border-amber-200 shadow-md ring-2 ring-amber-100' : 'bg-green-50 border-green-100 shadow-sm'
+                                            : isMaxBuzz ? 'bg-white border-amber-200 hover:border-amber-300' : 'bg-white border-green-50 hover:border-green-100 hover:shadow-lg hover:shadow-green-100/50'
                                         }`}
                                 >
-                                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl flex-shrink-0 border border-green-50">
+                                    <div className={`w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl flex-shrink-0 border ${isMaxBuzz ? 'border-amber-200' : 'border-green-50'}`}>
                                         {typeIcon[n.type] || '📢'}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-gray-900 leading-tight">
-                                            <span className="font-black hover:underline">{n.fromDog.name}</span>
-                                            <span className="text-gray-400 font-bold text-xs ml-1">({n.fromDog.breed})</span>
+                                            {isBuzz ? (
+                                                <span className="font-black text-amber-600">DOG RUNNING事務局</span>
+                                            ) : (
+                                                <>
+                                                    <span className="font-black hover:underline">{n.fromDog.name}</span>
+                                                    <span className="text-gray-400 font-bold text-xs ml-1">({n.fromDog.breed})</span>
+                                                </>
+                                            )}
                                             <span className="mx-1 text-gray-400">·</span>
-                                            <span className="font-bold text-green-700">
+                                            <span className={`font-bold ${isMaxBuzz ? 'text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-lg' : isBuzz ? 'text-orange-600' : 'text-green-700'}`}>
                                                 {t(`types.${n.type}`)}
                                             </span>
                                         </p>
@@ -153,7 +164,7 @@ export default function NotificationsPage() {
                                         </p>
                                     </div>
                                     {!n.readAt && (
-                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500 mt-1 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                                        <div className={`w-2.5 h-2.5 rounded-full mt-1 shadow-lg animate-pulse ${isMaxBuzz ? 'bg-amber-500' : 'bg-green-500'}`} />
                                     )}
                                 </Link>
                             );

@@ -35,6 +35,7 @@ model Dog {
   birthplace       String
   location         String
   personalityInput String
+  ownerCalling     String         @default("パパ")
   createdAt        DateTime       @default(now())
   iconUrl          String?
   comments         Comment[]
@@ -73,6 +74,7 @@ model DogPersona {
   catchphrasesJson  String
   behaviorJson      String
   learnedTopicsJson String   @default("[]")
+  intelligence      Int      @default(5)
   updatedAt         DateTime @updatedAt
   dog               Dog      @relation(fields: [dogId], references: [id])
 }
@@ -168,6 +170,7 @@ model NotificationSetting {
   notifyComment Boolean   @default(true)
   notifyFollow  Boolean   @default(true)
   notifyFriend  Boolean   @default(true)
+  notifyBuzz    Boolean   @default(true)
   owner         OwnerUser @relation(fields: [ownerId], references: [id])
 }
 

@@ -14,7 +14,8 @@ export interface ContentGenerator {
         catchphrases: string[],
         diaryContext: string,
         lang: string,
-        followingBreeds?: string[]
+        followingBreeds?: string[],
+        ownerCalling?: string
     ): Promise<string>;
 
     generateComment(
@@ -46,20 +47,18 @@ export interface ContentGenerator {
 const VOCAB = {
     // 超かわいい感情表現
     cute: ['えへへ', 'えへ', 'えっへん', 'えーん', 'きゅん', 'きゅるん', 'ぽわぽわ', 'ふにゃ', 'むにゃ', 'ぴと', 'ぴょこ', 'ぴょん', 'わふ', 'わんわん', 'てへ', 'にこにこ', 'うるうる', 'ぽてぽて', 'もふもふ', 'ぬくぬく', 'ふわふわ', 'ほわん', 'ちゅん', 'ころん', 'くるん', 'きらきら', 'とことこ', 'てくてく', 'ぽよん', 'にへへ', 'うとうと', 'すやすや'],
-    // 犬の可愛い行動
-    actions: ['しっぽふりふり', 'お耳ぴーん', 'くんくん調査', 'ぺろぺろ', 'ごろん', 'すりすり', 'ぴとってする', 'くっつく', 'ぴょこぴょこ歩く', 'おめめきらきら'],
+    // シーン別ワード（散歩・家・おやつ・ご飯）
+    walk: ['芝生', '草の匂い', '風', '日差し', '影', '電柱', 'マーキング', '坂道', '公園', '砂利', '足音', '水たまり', '葉っぱ', '匂い情報', '縄張り', 'リード', '日陰', 'ベンチ', '帰り道', '遠回り', '散歩コース', '冒険', '探索', '尻尾ぶんぶん', '鼻フル稼働', '満足', '達成感'],
+    home: ['ソファ', 'クッション', '毛布', 'ベッド', '日向ぼっこ', '外の音', '家族', '帰宅', 'お迎え', 'お昼寝', '夢', '伸び', 'あくび', '安心', '縄張り', '匂い', 'おもちゃ', 'ボール', 'ひっぱりっこ', '褒められたい', 'くっつく', '信頼', 'ぬくもり', '幸せ', '安心空間'],
+    snack: ['袋の音', '匂い', 'おすわり', '待て', '期待', 'よだれ', '欲しい', 'テンションMAX', '絶対美味しい', '好きなやつ', '神おやつ', '理性崩壊', 'ドヤ顔', 'もらえた', '幸せ', '噛む喜び', '旨味', '幸福度MAX', '大好き', '伝説おやつ'],
     // 喜び
-    joy: ['最高', 'しあわせ', 'たまらない', '優勝', 'しあわせすぎる', 'うれしすぎ', '天国みたい'],
+    joy: ['最高', 'しあわせ', 'たまらない', '優勝', 'しあわせすぎる', 'うれしすぎ', '幸福感', '満腹', '満足', 'ごちそうさま'],
     // 興奮
-    excited: ['やばい', '事件', 'すごい', 'テンション爆上がり', '心が跳ねた', '耳ぴーん'],
+    excited: ['やばい', '事件', 'すごい', 'テンション爆上がり', '心が跳ねた', '耳ぴーん', 'ドキドキ', 'ワクワク'],
     // 本能
-    instinct: ['しっぽ止まらない', '本能が喜んでる', '耳ぴーん', '肉球うずく', 'くんくんしたい', '嗅覚が騒ぐ', '野生が目覚めた'],
+    instinct: ['しっぽ止まらない', '本能が喜んでる', '耳ぴーん', '肉球うずく', 'くんくんしたい', '嗅覚が騒ぐ', '野生が目覚めた', '鼻フル稼働'],
     // 接続詞
     conj: ['でも', 'だけど', 'それに', 'しかも', 'だから', 'なのに', 'むしろ', 'ねえ', '実は', '正直'],
-    // 甘え
-    clingy: ['くっつきたい', 'そばにいたい', 'ぴとってしたい', 'ずっとそばにいてほしい', 'はなれたくない'],
-    // 友情
-    friendship: ['親友', '仲間', '安心する', '一緒にいると楽しい', 'ずっと友達でいよう'],
 };
 
 // =========================================================
@@ -130,14 +129,15 @@ export const TONE_PREFIX: Record<string, string[]> = {
     cheerful: ['わーい！', 'やったー！', 'ねえねえ！', 'みてみて！', 'たのしー！'],
     gentle: ['ほわん…', 'なんだかね、', 'ふふ、', 'ゆっくりだけど、', 'じんわり。'],
     cool: ['……。', 'ま、', 'べつに。', 'ふーん。', '（独り言）'],
-    childlike: ['ねえねえ！', 'えへへ、', 'あそぼ！', 'ぴとぴと。'],
-    formal: ['本日も佳き日。', 'ご機嫌よう。', '失礼いたします。'],
-    tsundere: ['べ、別に気にしてないけど。', 'ま、まあ。', '…なんでもない。'],
-    airhead: ['あれ？', 'なんだっけ？', 'ふしぎだな〜。', 'んんん？'],
-    dominant: ['当然だ。', '俺（私）がいれば大丈夫。', 'まかせろ。'],
-    timid: ['あの…', 'えと…', 'ちょっとだけ…', 'こわいけど…'],
-    relaxed: ['のんびり…', 'ゆっくりね。', 'まあまあ。', 'ほわん。'],
-    aggressive: ['ガオー！', 'わんわん！！', 'そこどけ！', 'なんだよ！', 'みてろよ！', 'ガウガウ！'],
+    childlike: ['ねえねえ！', 'えへへ、', 'あそぼ！', 'ぴとぴと。', '甘えたいの。'],
+    formal: ['本日も佳き日。', 'ご機嫌よう。', '失礼いたします。', '穏やかな時間です。'],
+    tsundere: ['べ、別に。', 'ま、まあ。', '…なんでもない。', '勘違いしないで。'],
+    airhead: ['あれ？', 'なんだっけ？', 'ふしぎだな〜。', 'んんん？', 'ふわふわ〜。'],
+    dominant: ['当然だ。', 'まかせろ。', '俺（私）が決める。', '文句あるか？'],
+    timid: ['あの…', 'えと…', 'ちょっとだけ…', '様子見してたけど、', 'こわいけど…'],
+    relaxed: ['のんびり…', 'ゆっくりね。', 'まあまあ。', 'ほわん。', 'マイペース。'],
+    aggressive: ['ガオー！', 'わんわん！！', 'そこどけ！', 'なんだよ！', 'ガウガウ！'],
+    glutton: ['袋の音！', 'いい匂い！', '期待MAX！', 'よだれが…', 'おやつ！？'],
 };
 
 // =========================================================
@@ -431,7 +431,8 @@ export class TemplateContentGenerator implements ContentGenerator {
         _catchphrases: string[],
         diaryContext: string,
         lang: string,
-        followingBreeds: string[] = []
+        followingBreeds: string[] = [],
+        ownerCalling: string = 'パパ'
     ): Promise<string> {
 
         if (lang !== 'ja') {
@@ -450,8 +451,8 @@ export class TemplateContentGenerator implements ContentGenerator {
         const roll = random();
         let content: string;
 
-        // ★ 感情ドリブン生成を70%の確率で使用（個性・多様性を確保）
-        if (roll < 0.70) {
+        // ★ 感情ドリブン生成を優先使用（新エンジンの要望通り、具体的で個性的な投稿へ）
+        if (roll < 0.95) {
             let attempt = 0;
             do {
                 content = generateEmotionDrivenPost({
@@ -461,44 +462,38 @@ export class TemplateContentGenerator implements ContentGenerator {
                     topics,
                     diaryContext,
                     emojiLevel,
+                    ownerCalling,
                 });
                 attempt++;
             } while (isDuplicatePost(content) && attempt < 5);
-        } else if (roll < 0.80) {
+        } else if (roll < 0.98) {
             content = pick(VIRAL_JA);
-        } else if (roll < 0.88) {
-            content = pick(MAMA_PAPA_BRAG);
-        } else if (roll < 0.94) {
-            content = pick(FOOD_DISCUSSION);
         } else {
-            const phrases = QUARREL_LIB[toneStyle] || QUARREL_LIB.cheerful;
-            content = pick(phrases);
+            content = pick(MAMA_PAPA_BRAG);
         }
 
-        if (diaryContext && diaryContext.length > 0 && random() > 0.1) {
+        if (diaryContext && diaryContext.length > 0 && random() > 0.4) {
             const words = diaryContext.split(/[！。、!?.()\n /]/).filter(w => w.length > 1 && w.length <= 10);
             if (words.length > 0) {
                 const hint = pick(words);
                 if (!content.includes(hint)) {
                     const injections = [
-                        `（${hint}のあとだからか、余計にたのしい🐾）\n`,
-                        `そういえば今日、${hint}のこと思い出しちゃった。\n`,
-                        `${hint}があったから、なんだかウキウキするわん！\n`,
-                        `さっきの${hint}、最高だったなぁ✨\n`,
-                        `ご主人さまと${hint}したの、ずっと覚えてるよ！\n`,
+                        `そういえばさっきの「${hint}」、まだ余韻がすごくて…✨\n`,
+                        `今日あった${hint}のこと、ずっと考えてるんだわん🐾\n`,
+                        `ふと思い出したけど、${hint}のとき最高だったなぁ🌈\n`,
                     ];
                     content = `${pick(injections)}${content}`;
                 }
             }
         }
 
-        if (random() < 0.35) {
+        if (random() < 0.3) {
             const prefixes = TONE_PREFIX[toneStyle] || TONE_PREFIX.cheerful;
             content = `${pick(prefixes)}\n${content}`;
         }
 
         if (random() < 0.4) {
-            const hashtagPool = ['犬のいる暮らし', '散歩', 'おやつ', 'ワンコ', 'いぬすたぐらむ', 'しあわせ', 'もふもふ', 'くんくん調査', '昼寝', '日向ぼっこ', 'パパ大好き', 'ママ大好き', 'ボール遊び', '肉球'];
+            const hashtagPool = ['犬のいる暮らし', 'ワンコのきもち', 'いぬすたぐらむ', '散歩コース', '日向ぼっこ', 'もふもふ', 'くんくん調査', '癒しの時間'];
             const chosen = [pick(hashtagPool)];
             if (random() < 0.3) chosen.push(pick(hashtagPool));
             const hashtags = chosen.map(h => `#${h}`).join(' ');

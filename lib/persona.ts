@@ -7,6 +7,7 @@ export interface PersonaData {
     sociability: number;
     curiosity: number;
     calmness: number;
+    intelligence: number;
     bio: string;
     topics: string[];
     dislikes: string[];
@@ -49,15 +50,19 @@ function pickN<T>(arr: T[], n: number, rng: () => number): T[] {
     return shuffled.slice(0, n);
 }
 
-const TONE_STYLES = ['cheerful', 'gentle', 'cool', 'childlike', 'formal'];
+const TONE_STYLES = ['cheerful', 'gentle', 'cool', 'childlike', 'formal', 'timid', 'relaxed', 'airhead', 'glutton'];
 const ALL_TOPICS_JA = ['散歩', 'ごはん', '昼寝', '友だち', '匂い', '天気', '飼い主への愛情', '外の世界', '遊び', 'おやつ', '公園', '季節'];
 const ALL_DISLIKES_JA = ['雷', '病院', '知らない人', 'お風呂', '掃除機', '車', '雨'];
 const CATCHPHRASES_JA: Record<string, string[]> = {
     cheerful: ['わーい！', 'たのしー！', 'やったー！', 'うれしいな〜！'],
     gentle: ['よかったね', 'ゆっくりしようか', 'なんだかいい日だな', 'ほわほわ〜'],
     cool: ['まあね', 'そんなもんだよ', 'ふーん', 'まあいいか'],
-    childlike: ['ねえねえ！', 'みてみて！', 'えへへ', 'なんで〜？'],
+    childlike: ['ねえねえ！', 'みてみて！', 'えへへ', 'なんで〜？', 'あのね！'],
     formal: ['本日も穏やかな一日ですね', 'なかなかよい天気です', 'ひとこと申し上げると'],
+    timid: ['あの…', 'えと…', 'こわくないよ', 'ちょっとだけ…'],
+    relaxed: ['のんびり', 'ゆっくりね', 'まあまあ', 'マイペースでいこう'],
+    airhead: ['あれ？', 'なんだっけ？', 'ふしぎだな〜', 'えーと'],
+    glutton: ['いい匂い！', 'おやつ！？', '期待MAX', '神おやつ！'],
 };
 
 const BREED_TOPIC_HINTS: Record<string, string[]> = {
@@ -83,7 +88,8 @@ export function generatePersona(
     birthday: string,
     birthplace: string,
     personalityInput: string,
-    diagnosis?: DiagnosisData
+    diagnosis?: DiagnosisData,
+    ownerCalling: string = 'パパ'
 ): PersonaData {
     const seed = hashString(`${name}${breed}${birthday}${birthplace}${personalityInput}${diagnosis?.socialStyle || ''}`);
     const rng = mulberry32(seed);
@@ -102,23 +108,46 @@ export function generatePersona(
     const curiosity = Math.min(10, Math.floor(rng() * 5) + 3 + curiosityBonus);
     const calmness = Math.min(10, Math.floor(rng() * 5) + 3 + calmnessBonus);
 
-    // Tone style
-    let toneStyle: string;
-    if (lowerPersonality.includes('甘えん坊') || lowerPersonality.includes('cuddly')) {
-        toneStyle = 'childlike';
-    } else if (diagnosis?.socialStyle === 'leader') {
-        toneStyle = 'formal';
-    } else if (lowerPersonality.includes('頑固') || lowerPersonality.includes('stubborn') || diagnosis?.socialStyle === 'shy') {
-        toneStyle = 'cool';
-    } else if (calmness >= 7) {
-        toneStyle = 'gentle';
-    } else if (sociability >= 7) {
-        toneStyle = 'cheerful';
-    } else {
-        toneStyle = pickWeighted(TONE_STYLES, rng);
+    // 性格タグの抽出
+    const traits = {
+        isEnergetic: lowerPersonality.includes('元気') || lowerPersonality.includes('活発') || lowerPersonality.includes('走り回る') || lowerPersonality.includes('アクティブ') || lowerPersonality.includes('やんちゃ'),
+        isCalm: lowerPersonality.includes('穏やか') || lowerPersonality.includes('のんびり') || lowerPersonality.includes('マイペース'),
+        isCuddly: lowerPersonality.includes('甘えん坊') || lowerPersonality.includes('寂しがり') || lowerPersonality.includes('ぴったり') || lowerPersonality.includes('べったり'),
+        isCurious: lowerPersonality.includes('好奇心') || lowerPersonality.includes('探検') || lowerPersonality.includes('新しいもの'),
+        isGlutton: lowerPersonality.includes('食いしん坊') || lowerPersonality.includes('ごはん') || lowerPersonality.includes('おやつ') || lowerPersonality.includes('食べる'),
+        isIndependent: lowerPersonality.includes('一人の時間') || lowerPersonality.includes('頑固') || lowerPersonality.includes('マイワールド'),
+        isFriendly: lowerPersonality.includes('人懐っこい') || lowerPersonality.includes('友だち') || lowerPersonality.includes('大好き'),
+        isTimid: lowerPersonality.includes('怖がり') || lowerPersonality.includes('臆病') || lowerPersonality.includes('ビビリ') || lowerPersonality.includes('慎重'),
+        isSmart: lowerPersonality.includes('賢い') || lowerPersonality.includes('お利口') || lowerPersonality.includes('天才') || lowerPersonality.includes('芸'),
+        isElegant: lowerPersonality.includes('上品') || lowerPersonality.includes('お嬢様') || lowerPersonality.includes('王子') || lowerPersonality.includes('プライド'),
+        isAirhead: lowerPersonality.includes('天然') || lowerPersonality.includes('不思議'),
+    };
+
+    // Calculate Intelligence (Smartness)
+    let intelligenceBonus = 0;
+    if (traits.isSmart) intelligenceBonus += 3;
+    if (traits.isCurious) intelligenceBonus += 1;
+    if (traits.isCalm) intelligenceBonus += 1;
+    const intelligence = Math.min(10, Math.floor(rng() * 4) + 4 + intelligenceBonus);
+
+    // Tone style selection
+    let toneStyle: string = '';
+    if (traits.isTimid) toneStyle = 'timid';
+    else if (traits.isAirhead) toneStyle = 'airhead';
+    else if (traits.isGlutton && rng() < 0.6) toneStyle = 'glutton';
+    else if (traits.isElegant) toneStyle = 'formal';
+    else if (traits.isCuddly && rng() < 0.8) toneStyle = 'childlike';
+    else if (traits.isEnergetic && rng() < 0.8) toneStyle = 'cheerful';
+    else if (traits.isCalm) toneStyle = 'relaxed';
+    else if (traits.isIndependent) toneStyle = 'cool';
+    else if (diagnosis?.socialStyle === 'leader') toneStyle = 'dominant';
+
+    if (!toneStyle) {
+        if (calmness >= 7) toneStyle = 'gentle';
+        else toneStyle = pickWeighted(TONE_STYLES, rng);
     }
 
-    // Bio Generation
+    // Bio Generation - Enhanced personality analysis
     let bioLines = [];
     bioLines.push(`${birthplace}生まれの${breed}です🐾`);
 
@@ -126,16 +155,32 @@ export function generatePersona(
         bioLines.push(`${diagnosis.favoriteRoutine}が一番の楽しみ！`);
     }
 
-    if (toneStyle === 'cheerful') bioLines.push('毎日元気いっぱい走り回るのが大好き！');
-    else if (toneStyle === 'gentle') bioLines.push('のんびり日向ぼっこするのが幸せ。');
-    else if (toneStyle === 'cool') bioLines.push('自分のペースで過ごすのが好きかな。');
-    else if (toneStyle === 'childlike') bioLines.push('ねえねえ、一緒に遊ぼうよ！');
-    else bioLines.push('今日も穏やかな一日を過ごしています。');
+    // 性格に基づいた文章を追加
+    if (traits.isEnergetic) bioLines.push('毎日元気いっぱい走り回るのが大好き！');
+    if (traits.isCalm) bioLines.push('のんびりした時間が一番の幸せ。');
+    if (traits.isCuddly) bioLines.push('誰かの隣にぴったりくっついているのが好き。');
+    if (traits.isGlutton) bioLines.push('美味しいものには目がないよ！');
+    if (traits.isIndependent) bioLines.push('自分の時間をゆっくり過ごすのも大切にしてるんだ。');
+    if (traits.isCurious) bioLines.push('新しいものを見つけると、ついつい探検しちゃう。');
+    if (traits.isTimid) bioLines.push('ちょっと怖がりだけど、少しずつ慣れていけたらいいな。');
+    if (traits.isSmart) bioLines.push('実はいろんなことをよく見て、考えてるんだよ。');
+    if (traits.isElegant) bioLines.push('気品ある振る舞いを心がけています。');
+    if (traits.isAirhead) bioLines.push('たまに「？」って顔されるけど、毎日楽しく過ごしてるよ。');
 
-    if (sociability >= 7) bioLines.push('お友だちをたくさん作りたいな🐕');
+    if (!Object.values(traits).some(t => t)) {
+        if (toneStyle === 'cheerful') bioLines.push('毎日を楽しく過ごしているよ。');
+        else if (toneStyle === 'gentle') bioLines.push('穏やかな日常を大切にしています。');
+        else bioLines.push('今日も一日を自分らしく過ごしています。');
+    }
+
+    if (sociability >= 7 || traits.isFriendly) bioLines.push('お友だちをたくさん作りたいな🐕');
     if (diagnosis?.socialStyle === 'shy') bioLines.push('ちょっと人見知りだけど、仲良くしてね。');
 
-    const bio = bioLines.join(' ');
+    let bio = bioLines.join(' ');
+    // 飼い主の呼び方を反映
+    if (ownerCalling) {
+        bio = bio.replace(/パパ|ママ|飼い主/g, ownerCalling);
+    }
 
     // Emoji level
     const emojiLevel =
@@ -169,6 +214,7 @@ export function generatePersona(
         sociability,
         curiosity,
         calmness,
+        intelligence,
         bio,
         topics,
         dislikes,

@@ -109,10 +109,10 @@ export async function runTick(): Promise<{
         try {
             const follows = await (prisma as any).follow.findMany({
                 where: { followerId: dog.id },
-                include: { following: { select: { breed: true } } },
+                include: { followed: { select: { breed: true } } },
                 take: 10,
             });
-            followingBreeds = follows.map((f: any) => f.following?.breed).filter(Boolean);
+            followingBreeds = follows.map((f: any) => f.followed?.breed).filter(Boolean);
         } catch { /* ignore if no follow model */ }
 
         // Get diary context
@@ -163,7 +163,8 @@ export async function runTick(): Promise<{
                 catchphrases,
                 diaryContext,
                 lang,
-                followingBreeds
+                followingBreeds,
+                dog.ownerCalling
             );
 
             // Include a diary photo ~50% of the time if one exists
@@ -209,7 +210,6 @@ export async function runTick(): Promise<{
         const otherPosts = recentPosts.filter(p => !friendUserIds.includes(p.dog.ownerId) && p.dogId !== dog.id);
 
         if (likesThisTick > 0) {
-            // すでにいいねした投稿IDを取得（重複いいねを防ぐ）
             const alreadyLikedPostIds = await prisma.like
                 .findMany({
                     where: { dogId: dog.id },
@@ -220,13 +220,25 @@ export async function runTick(): Promise<{
             const pickFromFriends = friendPosts.length > 0 && Math.random() < 0.6;
             const postList = pickFromFriends ? friendPosts : otherPosts;
 
-            // いいね済みを除外 + この犬固有のシャッフル（偏り防止）
-            const eligibleLikePosts = postList
-                .filter(p => !alreadyLikedPostIds.has(p.id))
-                .sort(() => Math.random() - 0.5);
+            const learnedTopics: string[] = JSON.parse(persona.learnedTopicsJson || '[]');
 
-            for (let i = 0; i < likesThisTick && i < eligibleLikePosts.length; i++) {
-                const post = eligibleLikePosts[i];
+            // Prioritize posts by score
+            const scoredLikePosts = postList
+                .filter(p => !alreadyLikedPostIds.has(p.id))
+                .map(p => {
+                    let score = Math.random() * 10;
+                    if (friendUserIds.includes(p.dog.ownerId)) score += 30;
+                    if (learnedTopics.some(t => p.content.includes(t))) score += 20;
+                    // Curiosity bonus for new topics
+                    if (persona.curiosity > 7 && !learnedTopics.some(t => p.content.includes(t))) score += 5;
+                    return { post: p, score };
+                });
+
+            scoredLikePosts.sort((a, b) => b.score - a.score);
+            const prioritizedLikes = scoredLikePosts.map(s => s.post);
+
+            for (let i = 0; i < likesThisTick && i < prioritizedLikes.length; i++) {
+                const post = prioritizedLikes[i];
                 try {
                     await prisma.like.create({
                         data: { dogId: dog.id, postId: post.id }
@@ -243,14 +255,14 @@ export async function runTick(): Promise<{
         }
 
         // --- Comment on other dogs' posts ---
-        // Only comment if we haven't done so recently (stagger across ticks)
         const commentsToday = await getDailyCount(dog.id, 'comment');
         const commentsNeeded = Math.max(0, commentTarget - commentsToday);
-        // At most 10–15 new first-comments per tick to spread activity
-        const commentsThisTick = Math.min(commentsNeeded, isSubscribed ? 15 : 10);
+
+        // Curiosity affects how many comments we want to make even if targets met
+        const curiosityBonus = persona.curiosity > 8 ? 2 : 0;
+        const commentsThisTick = Math.min(commentsNeeded + curiosityBonus, isSubscribed ? 15 : 10);
 
         if (commentsThisTick > 0) {
-            // Posts this dog already commented on (ever, not just past hour)
             const alreadyCommentedPostIds = await prisma.comment
                 .findMany({
                     where: { dogId: dog.id },
@@ -262,20 +274,25 @@ export async function runTick(): Promise<{
             const pickFromFriends = friendPosts.length > 0 && Math.random() < 0.7;
             const list = pickFromFriends ? friendPosts : otherPosts;
 
-            // eligible: not already commented, not over-commented (cap MAX_COMMENTS_PER_POST)
             const eligiblePosts = list.filter(
                 (p) =>
                     !alreadyCommentedPostIds.has(p.id) &&
                     (p as any)._count.comments < MAX_COMMENTS_PER_POST
             );
 
-            // Shuffle to avoid always picking the newest post
-            // ─ 優先度スコアリング: 仲良し投稿 > 話題一致 > その他 ─
             const learnedTopics: string[] = JSON.parse(persona.learnedTopicsJson || '[]');
             const scoredPosts = eligiblePosts.map(p => {
-                let score = Math.random() * 10; // ランダム基礎スコア
-                if (pickFromFriends && friendPosts.includes(p)) score += 30;
-                if (learnedTopics.some(t => p.content.includes(t))) score += 20;
+                let score = Math.random() * 10;
+                if (pickFromFriends && friendPosts.includes(p)) score += 35;
+
+                // Intelligence bonus: Smart dogs focus more on topics they know
+                const hasLearnedTopic = learnedTopics.some(t => p.content.includes(t));
+                if (hasLearnedTopic) {
+                    score += 15 + ((persona as any).intelligence || 5);
+                }
+
+                // Introvert check
+                if (persona.calmness > 8 && persona.sociability < 4) score -= 15;
                 return { post: p, score };
             });
             scoredPosts.sort((a, b) => b.score - a.score);
@@ -283,39 +300,44 @@ export async function runTick(): Promise<{
 
             for (let i = 0; i < commentsThisTick && i < prioritized.length; i++) {
                 const post = prioritized[i];
-
-                // 即時反応トリガー検出 — 名前呼び・褒め等 → 短文クイック返信
                 const trigger = detectImmediateTrigger(post.content, dog.name);
-                let content: string;
+                let content: string = '';
 
-                if (trigger && Math.random() < 0.5) {
-                    // 50%の確率でクイック返信（短文テンポ返信）
-                    let quickReply = generateQuickReply(trigger);
-                    // 語尾エンジンを適用
-                    const { addSpeechStyle } = await import('./speechStyle');
-                    quickReply = addSpeechStyle(quickReply, dog.breed, persona.toneStyle, followingBreeds);
-                    content = quickReply;
-                } else if (Math.random() < 0.20) {
-                    // 20%はクイックランダム短文
-                    const quickLines = [
-                        'それわかる…！', 'え！ほんと？', 'すごいじゃん！', 'いいな〜！',
-                        'わかりみが深い', 'わかる気がする！', '気になる！', 'えっそうなんだ！',
-                        '共感しかない', 'それな！！', 'えへへ笑', 'うんうん。',
-                    ];
-                    content = quickLines[Math.floor(Math.random() * quickLines.length)];
-                } else {
-                    content = await contentGenerator.generateComment(
-                        post.dog.name,
-                        persona.toneStyle,
-                        persona.emojiLevel,
-                        post.content,
-                        lang,
-                        diaryContext,
-                        JSON.parse(persona.learnedTopicsJson || '[]'),
-                        dog.breed,
-                        followingBreeds
-                    );
+                let attempt = 0;
+                while (attempt < 3) {
+                    if (trigger && Math.random() < 0.5) {
+                        let quickReply = generateQuickReply(trigger);
+                        const { addSpeechStyle } = await import('./speechStyle');
+                        quickReply = addSpeechStyle(quickReply, dog.breed, persona.toneStyle, followingBreeds);
+                        content = quickReply;
+                    } else if (Math.random() < 0.20) {
+                        const quickLines = [
+                            'それわかる…！', 'え！ほんと？', 'すごいじゃん！', 'いいな〜！',
+                            'わかりみが深い', 'わかる気がする！', '気になる！', 'えっそうなんだ！',
+                            '共感しかない', 'それな！！', 'えへへ笑', 'うんうん。',
+                        ];
+                        content = quickLines[Math.floor(Math.random() * quickLines.length)];
+                    } else {
+                        content = await contentGenerator.generateComment(
+                            post.dog.name,
+                            persona.toneStyle,
+                            persona.emojiLevel,
+                            post.content,
+                            lang,
+                            diaryContext,
+                            JSON.parse(persona.learnedTopicsJson || '[]'),
+                            dog.breed,
+                            followingBreeds
+                        );
+                    }
+
+                    // Check for duplicate content across all comments globally to keep it fresh
+                    const { isDuplicatePost } = await import('./emotionPost');
+                    if (!isDuplicatePost(content)) break;
+                    attempt++;
                 }
+
+                if (!content) continue;
 
                 await prisma.comment.create({
                     data: { dogId: dog.id, postId: post.id, content, language: lang },
@@ -420,35 +442,51 @@ export async function runTick(): Promise<{
     }
 
     // --- Buzz System: バズの発生と通知 ---
-    // 最近（24時間以内）の投稿で、いいねが3つ以上あり、まだバズ通知していないものを探す
-    // ※ MVPなので閾値を低めに設定
+    // 最近（24時間以内）の投稿で、いいねが多く、まだそのレベルの通知をしていないものを探す
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const candidateBuzzPosts = await prisma.post.findMany({
         where: {
             createdAt: { gte: dayAgo },
-            likes: { some: {} }, // 少なくとも1つはいいねがある
         },
         include: {
+            dog: { select: { name: true } },
             _count: { select: { likes: true, reposts: true } },
-            notifications: { where: { type: 'buzz' } }
+            notifications: { where: { type: { startsWith: 'buzz' } } }
         },
-        take: 20
+        take: 30
     });
 
     for (const post of candidateBuzzPosts) {
-        // いいねが3つ以上 且つ バズ通知がまだ
-        if (post._count.likes >= 3 && post.notifications.length === 0) {
-            await createNotification(post.dogId, 'buzz', post.id, post.dogId); // 便宜上 fromDogId は自分
+        const likes = post._count.likes;
+        let buzzType: string | null = null;
 
-            // バズった投稿にはさらにランダムな追い打ちいいね/リポストを発生させる (模擬的な拡散)
-            const randomDogs = dogs.filter(d => d.id !== post.dogId).sort(() => Math.random() - 0.5).slice(0, 3);
-            for (const d of randomDogs) {
-                try {
-                    await prisma.like.create({ data: { dogId: d.id, postId: post.id } });
-                    if (Math.random() < 0.5) {
-                        await prisma.repost.create({ data: { dogId: d.id, postId: post.id } });
-                    }
-                } catch (e) { /* ignore duplicates */ }
+        // バズレベルの判定
+        if (likes >= 30) buzzType = 'buzz_max';      // 伝説級
+        else if (likes >= 10) buzzType = 'buzz_mid';  // 大人気
+        else if (likes >= 3) buzzType = 'buzz_small'; // ちょっと話題
+
+        if (buzzType) {
+            // すでに同じレベルかそれ以上の通知があるかチェック
+            const hasNotified = post.notifications.some(n => {
+                if (buzzType === 'buzz_small') return true; // 何かしらbuzzがあればsmallは不要
+                if (buzzType === 'buzz_mid') return n.type === 'buzz_mid' || n.type === 'buzz_max';
+                if (buzzType === 'buzz_max') return n.type === 'buzz_max';
+                return false;
+            });
+
+            if (!hasNotified) {
+                await createNotification(post.dogId, buzzType, post.id, post.dogId);
+                console.log(`[BUZZ] ${post.dog.name}'s post is ${buzzType}! (${likes} likes)`);
+
+                // 拡散をシミュレート
+                const spreadCount = buzzType === 'buzz_max' ? 10 : buzzType === 'buzz_mid' ? 5 : 2;
+                const randomDogs = dogs.filter(d => d.id !== post.dogId).sort(() => Math.random() - 0.5).slice(0, spreadCount);
+                for (const d of randomDogs) {
+                    try {
+                        await prisma.like.create({ data: { dogId: d.id, postId: post.id } });
+                        if (Math.random() < 0.7) await prisma.repost.create({ data: { dogId: d.id, postId: post.id } });
+                    } catch (e) { /* ignore */ }
+                }
             }
         }
     }
@@ -518,6 +556,10 @@ async function learnTopic(dogId: string, content: string) {
         let learned: string[] = JSON.parse(persona.learnedTopicsJson || '[]');
         const candidates = keywords.filter(k => !learned.includes(k));
         if (candidates.length === 0) return;
+
+        // かしこさ(intelligence)によって学習確率が変わる (30% ~ 80%)
+        const learnChance = 0.3 + ((persona as any).intelligence || 5) * 0.05;
+        if (Math.random() > learnChance) return;
 
         // 1つの投稿から1つだけ学習
         const newTopic = candidates[Math.floor(Math.random() * candidates.length)];

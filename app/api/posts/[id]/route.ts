@@ -12,13 +12,25 @@ export async function GET(
             where: { id },
             include: {
                 dog: {
-                    select: { id: true, name: true, breed: true, iconUrl: true }
+                    select: {
+                        id: true,
+                        name: true,
+                        breed: true,
+                        iconUrl: true,
+                        persona: { select: { toneStyle: true } }
+                    }
                 },
                 comments: {
                     orderBy: { createdAt: 'asc' },
                     include: {
                         dog: {
-                            select: { id: true, name: true, breed: true, iconUrl: true }
+                            select: {
+                                id: true,
+                                name: true,
+                                breed: true,
+                                iconUrl: true,
+                                persona: { select: { toneStyle: true } }
+                            }
                         }
                     }
                 },

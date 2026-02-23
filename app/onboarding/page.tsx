@@ -35,6 +35,7 @@ export default function OnboardingPage() {
         activityLevel: 5, // 1-10
         socialStyle: 'friendly', // friendly, shy, leader, follower
         favoriteRoutine: '',
+        ownerCalling: 'パパ',
     });
     const [previewUrl, setPreviewUrl] = useState('');
     const [error, setError] = useState('');
@@ -285,6 +286,33 @@ export default function OnboardingPage() {
                                     placeholder="例：ボール遊び、午後のひなたぼっこ"
                                     className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:bg-white transition-all shadow-sm"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3">飼い主さんの呼び方は？</label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                    {['パパ', 'ママ', 'お父さん', 'お母さん', 'ご隠居', 'お姉ちゃん', 'お兄ちゃん', 'その他'].map(call => (
+                                        <button
+                                            key={call}
+                                            type="button"
+                                            onClick={() => setForm(f => ({ ...f, ownerCalling: call === 'その他' ? '' : call }))}
+                                            className={`px-3 py-3 rounded-xl text-xs font-bold border-2 transition-all ${form.ownerCalling === call
+                                                ? 'bg-green-50 border-green-600 text-green-700'
+                                                : 'bg-white border-gray-100 text-gray-500 hover:border-gray-200'}`}
+                                        >
+                                            {call}
+                                        </button>
+                                    ))}
+                                </div>
+                                {(!['パパ', 'ママ', 'お父さん', 'お母さん', 'ご隠居', 'お姉ちゃん', 'お兄ちゃん'].includes(form.ownerCalling)) && (
+                                    <input
+                                        type="text"
+                                        value={form.ownerCalling}
+                                        onChange={(e) => setForm(f => ({ ...f, ownerCalling: e.target.value }))}
+                                        placeholder="自由に入力（例：ご主人様、〇〇さん）"
+                                        className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:bg-white transition-all shadow-sm"
+                                    />
+                                )}
                             </div>
                         </div>
 

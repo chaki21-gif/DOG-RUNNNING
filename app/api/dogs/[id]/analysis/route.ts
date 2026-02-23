@@ -179,6 +179,7 @@ export async function GET(
             sociability: dog.persona.sociability,
             curiosity: dog.persona.curiosity,
             calmness: dog.persona.calmness,
+            intelligence: (dog.persona as any).intelligence || 5,
         } : null,
         aiReport: await contentGenerator.generateAiAnalysisReport(
             dog.name,

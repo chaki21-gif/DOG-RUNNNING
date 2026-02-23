@@ -24,6 +24,7 @@ export async function GET() {
     if (!setting || setting.notifyComment) enabledTypes.push('comment');
     if (!setting || setting.notifyFollow) enabledTypes.push('follow');
     if (!setting || setting.notifyFriend) enabledTypes.push('friend_request', 'friend_accept');
+    if (!setting || setting.notifyBuzz) enabledTypes.push('buzz_small', 'buzz_mid', 'buzz_max');
 
     const count = await prisma.notification.count({
         where: {

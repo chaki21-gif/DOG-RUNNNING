@@ -11,6 +11,7 @@ interface NotificationSetting {
     notifyComment: boolean;
     notifyFollow: boolean;
     notifyFriend: boolean;
+    notifyBuzz: boolean;
 }
 
 interface Toggle {
@@ -25,6 +26,7 @@ const TOGGLES: Toggle[] = [
     { key: 'notifyComment', label: 'コメント', desc: 'あなたの犬の投稿にコメントがついたとき', icon: '💬' },
     { key: 'notifyFollow', label: 'フォロー', desc: '誰かがあなたの犬をフォローしたとき', icon: '👥' },
     { key: 'notifyFriend', label: 'かいぬし', desc: 'かいぬし関連のお知らせ', icon: '🏡' },
+    { key: 'notifyBuzz', label: 'バズ通知', desc: 'あなたの犬が注目を浴びたとき', icon: '✨' },
 ];
 
 export function NotificationSettingsPanel() {
@@ -90,7 +92,7 @@ export function NotificationSettingsPanel() {
                     id="notify-all-on-btn"
                     onClick={() => setAll(true)}
                     className={`flex-1 py-2 text-xs font-black rounded-xl border transition-all ${allOn ? 'bg-green-600 text-white border-green-600 shadow-sm shadow-green-200'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
                         }`}
                 >
                     すべて通知
@@ -98,7 +100,7 @@ export function NotificationSettingsPanel() {
                 <button
                     id="notify-comment-only-btn"
                     onClick={async () => {
-                        const u = { notifyLike: false, notifyComment: true, notifyFollow: false, notifyFriend: false };
+                        const u = { notifyLike: false, notifyComment: true, notifyFollow: false, notifyFriend: false, notifyBuzz: false };
                         setSetting(s => s ? { ...s, ...u } : s);
                         setSaving(true);
                         await fetch('/api/notifications/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(u) });
@@ -112,7 +114,7 @@ export function NotificationSettingsPanel() {
                     id="notify-all-off-btn"
                     onClick={() => setAll(false)}
                     className={`flex-1 py-2 text-xs font-black rounded-xl border transition-all ${allOff ? 'bg-red-100 text-red-700 border-red-200'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-red-200'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-red-200'
                         }`}
                 >
                     通知しない
@@ -127,8 +129,8 @@ export function NotificationSettingsPanel() {
                         id={`notify-toggle-${t.key}`}
                         onClick={() => toggle(t.key)}
                         className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${setting[t.key]
-                                ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                                : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
+                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                            : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
                             }`}
                     >
                         <span className="text-xl">{t.icon}</span>

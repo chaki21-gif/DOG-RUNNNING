@@ -8,7 +8,7 @@ interface Comment {
     id: string;
     content: string;
     createdAt: string;
-    dog: { id: string; name: string; breed: string; iconUrl: string | null };
+    dog: { id: string; name: string; breed: string; iconUrl: string | null; persona?: { toneStyle: string } | null };
 }
 
 interface Post {
@@ -16,7 +16,7 @@ interface Post {
     content: string;
     imageUrl: string | null;
     createdAt: string;
-    dog: { id: string; name: string; breed: string; iconUrl: string | null };
+    dog: { id: string; name: string; breed: string; iconUrl: string | null; persona?: { toneStyle: string } | null };
     comments: Comment[];
     _count: { likes: number; reposts: number; comments: number };
 }
@@ -97,7 +97,37 @@ export default function PostDetailPage() {
                         <Link href={`/app/dog/${post.dog.id}`} className="font-black text-lg text-gray-900 hover:underline decoration-green-500 decoration-2 block leading-tight">
                             {post.dog.name}
                         </Link>
-                        <span className="text-green-600 text-xs font-black uppercase tracking-tight">{post.dog.breed}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-green-600 text-xs font-black uppercase tracking-tight">{post.dog.breed}</span>
+                            {post.dog.persona?.toneStyle && (
+                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase border border-green-100/50">
+                                    {(() => {
+                                        switch (post.dog.persona.toneStyle) {
+                                            case 'childlike': return '甘えん坊';
+                                            case 'glutton': return '食いしん坊';
+                                            case 'timid': return '慎重';
+                                            case 'airhead': return '天然';
+                                            case 'relaxed': return 'マイペース';
+                                            case 'cheerful': return '活発';
+                                            case 'formal': return 'お利口';
+                                            case 'cool': return 'クール';
+                                            case 'gentle': return 'おだやか';
+                                            case 'dominant': return 'リーダー';
+                                            default: return 'おだやか';
+                                        }
+                                    })()}
+                                </span>
+                            )}
+                            {post._count.likes >= 3 && (
+                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black border animate-pulse ${post._count.likes >= 30 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                    post._count.likes >= 10 ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                        'bg-green-50 text-green-600 border-green-100'
+                                    }`}>
+                                    <span>{post._count.likes >= 30 ? '🌟' : post._count.likes >= 10 ? '🔥' : '✨'}</span>
+                                    <span>{post._count.likes >= 30 ? 'LEGEND' : post._count.likes >= 10 ? 'HOT' : 'TREND'}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -174,7 +204,28 @@ export default function PostDetailPage() {
                                         {getTimeAgo(comment.createdAt)}
                                     </span>
                                 </div>
-                                <span className="text-[10px] text-gray-400 font-bold -mt-0.5">{comment.dog.breed}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-gray-400 font-bold">{comment.dog.breed}</span>
+                                    {comment.dog.persona?.toneStyle && (
+                                        <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase border border-green-100/50">
+                                            {(() => {
+                                                switch (comment.dog.persona.toneStyle) {
+                                                    case 'childlike': return '甘えん坊';
+                                                    case 'glutton': return '食いしん坊';
+                                                    case 'timid': return '慎重';
+                                                    case 'airhead': return '天然';
+                                                    case 'relaxed': return 'マイペース';
+                                                    case 'cheerful': return '活発';
+                                                    case 'formal': return 'お利口';
+                                                    case 'cool': return 'クール';
+                                                    case 'gentle': return 'おだやか';
+                                                    case 'dominant': return 'リーダー';
+                                                    default: return 'おだやか';
+                                                }
+                                            })()}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <div className="text-gray-700 text-[15px] font-medium leading-relaxed whitespace-pre-wrap">
                                 {comment.content}

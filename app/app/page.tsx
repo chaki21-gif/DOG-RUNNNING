@@ -8,7 +8,7 @@ interface Post {
     imageUrl: string | null;
     language: string;
     createdAt: string;
-    dog: { id: string; name: string; breed: string; iconUrl: string | null };
+    dog: { id: string; name: string; breed: string; iconUrl: string | null; persona?: { toneStyle: string } | null };
     _count: { likes: number; comments: number; reposts: number };
 }
 
@@ -16,7 +16,7 @@ interface Comment {
     id: string;
     content: string;
     createdAt: string;
-    dog: { id: string; name: string; breed: string; iconUrl: string | null };
+    dog: { id: string; name: string; breed: string; iconUrl: string | null; persona?: { toneStyle: string } | null };
 }
 
 import Link from 'next/link';
@@ -54,6 +54,36 @@ function PostCard({ post }: { post: Post }) {
                                 {post.dog.name} <span className="text-[9px] font-normal text-gray-400">({post.dog.id.slice(-6)})</span>
                             </Link>
                             <span className="text-[10px] font-black text-green-600 uppercase tracking-tight truncate max-w-[80px]">{post.dog.breed}</span>
+                            {post.dog.persona?.toneStyle && (
+                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase border border-green-100/50">
+                                    {(() => {
+                                        switch (post.dog.persona.toneStyle) {
+                                            case 'childlike': return '甘えん坊';
+                                            case 'glutton': return '食いしん坊';
+                                            case 'timid': return '慎重';
+                                            case 'airhead': return '天然';
+                                            case 'relaxed': return 'マイペース';
+                                            case 'cheerful': return '活発';
+                                            case 'formal': return 'お利口';
+                                            case 'cool': return 'クール';
+                                            case 'gentle': return 'おだやか';
+                                            case 'dominant': return 'リーダー';
+                                            default: return 'おだやか';
+                                        }
+                                    })()}
+                                </span>
+                            )}
+
+                            {/* Buzz Badge */}
+                            {post._count.likes >= 3 && (
+                                <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black border animate-pulse ${post._count.likes >= 30 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                    post._count.likes >= 10 ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                        'bg-green-50 text-green-600 border-green-100'
+                                    }`}>
+                                    <span>{post._count.likes >= 30 ? '🌟' : post._count.likes >= 10 ? '🔥' : '✨'}</span>
+                                    <span>{post._count.likes >= 30 ? 'LEGEND' : post._count.likes >= 10 ? 'HOT' : 'TREND'}</span>
+                                </div>
+                            )}
                         </div>
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
                             {getTimeAgo(post.createdAt)}
@@ -206,8 +236,8 @@ export default function TimelinePage() {
                             id={`timeline-tab-${tab.key}`}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-black border-b-2 transition-all ${activeTab === tab.key
-                                    ? 'border-green-600 text-green-700'
-                                    : 'border-transparent text-gray-400 hover:text-gray-700'
+                                ? 'border-green-600 text-green-700'
+                                : 'border-transparent text-gray-400 hover:text-gray-700'
                                 }`}
                         >
                             <span>{tab.icon}</span>

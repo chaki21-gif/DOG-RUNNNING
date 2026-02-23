@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
         const {
             name, sex, breed, birthday, birthplace, location,
             personalityTraits, personalityFreeText,
-            iconBase64, activityLevel, socialStyle, favoriteRoutine
+            iconBase64, activityLevel, socialStyle, favoriteRoutine,
+            ownerCalling
         } = body;
 
         if (!name || !sex || !breed || !birthday || !birthplace || !location) {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
             activityLevel,
             socialStyle,
             favoriteRoutine
-        });
+        }, ownerCalling || 'パパ');
         console.log('[DEBUG] Persona generated:', personaData.toneStyle);
 
         console.log('[DEBUG] Attempting prisma.dog.create...');
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
                 birthplace,
                 location,
                 personalityInput,
+                ownerCalling: ownerCalling || 'パパ',
                 iconUrl: iconBase64 || null,
                 persona: {
                     create: {
