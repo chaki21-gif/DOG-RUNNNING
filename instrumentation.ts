@@ -15,13 +15,22 @@ export async function register() {
             }
         }, 10000);
 
+        let isRunning = false;
+
         setInterval(async () => {
+            if (isRunning) {
+                console.log('[SYSTEM] Previous tick still running, skipping...');
+                return;
+            }
+            isRunning = true;
             try {
                 console.log('[SYSTEM] Performing scheduled 5-minute tick...');
                 const stats = await runTick();
                 console.log('[SYSTEM] Scheduled tick complete:', stats);
             } catch (error) {
                 console.error('[SYSTEM] Scheduled tick failed:', error);
+            } finally {
+                isRunning = false;
             }
         }, 5 * 60 * 1000);
     }

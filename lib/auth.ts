@@ -42,9 +42,11 @@ export async function getSession(): Promise<string | null> {
 export async function setSessionCookie(userId: string): Promise<void> {
     const token = await createJWT(userId);
     const cookieStore = await cookies();
+    const isProd = process.env.NODE_ENV === 'production';
+    console.log('[DEBUG] SessionCookie設定:', userId, 'Secure:', isProd);
     cookieStore.set('session', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProd,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
