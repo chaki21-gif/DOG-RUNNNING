@@ -5,13 +5,8 @@ import { getSession } from '@/lib/auth';
 export async function GET(req: NextRequest) {
     try {
         console.log('[DEBUG] タイムラインGETリクエスト受信');
-        let userId = await Promise.race([
-            getSession(),
-            new Promise<null>((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 10000))
-        ]).catch(e => {
-            console.error('[DEBUG] セッション取得エラー:', e);
-            return null;
-        });
+        const userId = await getSession();
+        console.log('[DEBUG] 取得されたユーザーID:', userId);
 
         if (!userId) {
             console.warn('[DEBUG] 認証エラー: 投稿を表示するにはログインが必要です');

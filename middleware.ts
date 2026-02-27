@@ -21,11 +21,15 @@ export async function middleware(req: NextRequest) {
     // Auth check for protected pages
     if (protectedRoutes.some((r) => pathname.startsWith(r))) {
         const token = req.cookies.get('session')?.value;
+        console.log('[DEBUG] Middleware: Path:', pathname, 'HasToken:', !!token);
         if (!token) {
+            console.warn('[DEBUG] Middleware: No token, redirecting to /login');
             return NextResponse.redirect(new URL('/login', req.url));
         }
         const payload = await verifyJWT(token);
+        console.log('[DEBUG] Middleware: Payload:', payload?.sub);
         if (!payload) {
+            console.warn('[DEBUG] Middleware: Invalid token, redirecting to /login');
             return NextResponse.redirect(new URL('/login', req.url));
         }
     }
