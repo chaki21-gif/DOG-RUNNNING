@@ -55,5 +55,5 @@ export async function setSessionCookie(userId: string): Promise<void> {
 
 export async function clearSessionCookie(): Promise<void> {
     const cookieStore = await cookies();
-    cookieStore.delete('session');
+    cookieStore.set('session', '', { path: '/', maxAge: 0 });
 }

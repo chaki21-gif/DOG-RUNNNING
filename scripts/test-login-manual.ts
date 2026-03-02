@@ -1,5 +1,5 @@
-import { prisma } from './lib/prisma';
-import { verifyPassword } from './lib/auth';
+import { prisma } from '../lib/prisma';
+import { verifyPassword } from '../lib/auth';
 
 async function main() {
     const email = 'chaki.212121@gmail.com'; // いぬ太郎's owner
@@ -9,14 +9,10 @@ async function main() {
         return;
     }
     console.log('Found user:', user.email);
-
-    // Check common passwords if known, or just log the hash
     console.log('Password hash:', user.passwordHash);
 
-    // Test a common password if you think they used one
-    const testPlain = 'password123';
-    const isValid = await verifyPassword(testPlain, user.passwordHash);
-    console.log(`Is 'password123' valid?`, isValid);
+    // We don't know the password, but we can check if it matches a likely candidate
+    // Or just confirm it's a valid bcrypt hash
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
