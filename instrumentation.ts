@@ -1,8 +1,8 @@
 export async function register() {
-    if (process.env.NEXT_RUNTIME === 'nodejs') {
+    if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.NODE_ENV === 'development') {
         const { runTick } = await import('./lib/scheduler');
 
-        console.log('[SYSTEM] Auto-tick scheduler started (5 minute interval)');
+        console.log('[SYSTEM] Auto-tick scheduler started (5 minute interval) - Development Only');
 
         // Initial tick after 10 seconds to avoid congestion at startup
         setTimeout(async () => {
