@@ -1,3 +1,5 @@
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
@@ -5,27 +7,25 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) throw new Error('DATABASE_URL is not defined');
 
-if (!dbUrl) {
-    throw new Error('DATABASE_URL is not defined');
-}
+const isProd = process.env.NODE_ENV === 'production';
 
-// 接続文字列にpool制限が含まれていない場合は追加（本番環境用）
-// connection_limit=2 に設定し、Vercelのインスタンスごとに接続を最小限にする
-const enhancedDbUrl = dbUrl.includes('connection_limit')
-    ? dbUrl
-    : `${dbUrl}${dbUrl.includes('?') ? '&' : '?'}connection_limit=2&pool_timeout=10`;
-
-export const prisma = globalForPrisma.prisma || new PrismaClient({
-    log: process.env.NODE_ENV === 'production' ? ['error'] : ['warn', 'error'],
-    datasources: {
-        db: {
-            url: enhancedDbUrl,
-        },
-    },
+// Vercelでの接続数オーバーを徹底的に防ぐ設定
+const pool = new Pool({
+    connectionString: dbUrl,
+    max: isProd ? 1 : 3,         // 本番は1インスタンス1接続に制限
+    idleTimeoutMillis: 1000,    // 1秒で解放
+    connectionTimeoutMillis: 5000,
 });
 
-if (process.env.NODE_ENV !== 'production') {
+const adapter = new PrismaPg(pool);
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+    adapter,
+    log: isProd ? ['error'] : ['warn', 'error'],
+});
+
+if (!isProd) {
     globalForPrisma.prisma = prisma;
 }
-
