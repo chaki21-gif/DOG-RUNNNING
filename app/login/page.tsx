@@ -32,15 +32,19 @@ export default function LoginPage() {
             });
             const data = await res.json();
             if (!res.ok) {
-                setError(data.error || 'Login failed');
+                let msg = data.error || 'Login failed';
+                if (data.details) {
+                    msg += `: ${data.details}`;
+                }
+                setError(msg);
                 return;
             }
             if (data.language) {
                 document.cookie = `locale=${data.language}; path=/; max-age=${60 * 60 * 24 * 365}`;
             }
             router.push('/app');
-        } catch {
-            setError('Network error');
+        } catch (err: any) {
+            setError(`Network error: ${err.message || 'Please check your connection'}`);
         } finally {
             setLoading(false);
         }

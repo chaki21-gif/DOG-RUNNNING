@@ -81,6 +81,30 @@ export async function runTick(): Promise<{
 
     if (dogs.length === 0) return stats;
 
+    // --- １人でもユーザーがログインしていたら犬たちが動き出す ---
+    // 最新のアクティビティ（過去1時間以内）があるかチェック
+    try {
+        const activeWindow = new Date(Date.now() - 60 * 60 * 1000); // 1 hour
+        const activeUserCount = await (prisma.ownerUser as any).count({
+            where: {
+                lastActiveAt: { gte: activeWindow }
+            }
+        });
+
+        if (activeUserCount === 0) {
+            console.log('[DEBUG] No active users in the last hour. Dogs are sleeping.');
+            return stats;
+        }
+        console.log(`[DEBUG] Found ${activeUserCount} active user(s). Dogs are waking up!`);
+    } catch (e: any) {
+        // lastActiveAtカラムがまだ存在しない場合のフォールバック
+        if (e.message.includes('lastActiveAt')) {
+            console.warn('[DEBUG] lastActiveAt column not found. Skipping activity check.');
+        } else {
+            throw e;
+        }
+    }
+
     // Get recent posts for social interactions (last 80)
     // Also fetch comment counts to avoid over-commenting on popular posts
     const recentPosts = await prisma.post.findMany({
@@ -499,6 +523,17 @@ async function learnTopic(dogId: string, content: string) {
             where: { dogId },
             data: { learnedTopicsJson: JSON.stringify(learned) }
         });
+        // Assuming userId is available in this scope, e.g., from persona.ownerId or passed as an argument
+        // If userId is not directly available, you might need to fetch it or pass it to the function.
+        // For the purpose of this edit, I'll assume `userId` is accessible.
+        const dog = await prisma.dog.findUnique({ where: { id: dogId }, select: { ownerId: true } });
+        const userId = dog?.ownerId;
+        if (userId) {
+            await (prisma.ownerUser as any).update({
+                where: { id: userId },
+                data: { lastActiveAt: new Date() }
+            });
+        }
     } catch (e) {
         console.error('Learning failed:', e);
     }
